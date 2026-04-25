@@ -1,0 +1,9 @@
+{
+    "name": "ksfraser/ksf_fa_hrm",
+    "description": "FA module - HRM",
+    "type": "fa-module",
+    "require": {
+        "ksfraser/ksf_HRM": "*",
+        "ksfraser/composerdendencymanager": "*"
+    }
+}
