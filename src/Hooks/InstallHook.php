@@ -18,116 +18,36 @@ class InstallHook
 {
     public static function install(): void
     {
-        self::createTables();
         self::createMenuItems();
         self::setDefaultPreferences();
     }
 
-    private static function createTables(): void
+    public static function activate($company, $check_only=true): bool
     {
-        // HRM uses the contact system from ksf_FA_CRM
-        // These tables should already exist from ksf_FA_CRM install:
-        // - fa_contacts_employment (employment details)
-        // - fa_contacts_pii (PII separated)
-        // - fa_contacts_banking (banking details)
-        // - fa_dependent_details (benefit-specific dependent info)
-        // - fa_departments, fa_positions, fa_grades
-        // - fa_pay_elements, fa_salary_structure
-        // - fa_separation_reasons
-
-        // HRM-specific tables that extend the contact system:
-        $tables = [
-            'ksf_hrm_benefits' => "
-                CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_benefits (
-                    benefit_id INT NOT NULL AUTO_INCREMENT,
-                    benefit_name VARCHAR(100) NOT NULL,
-                    benefit_code VARCHAR(20) UNIQUE NOT NULL,
-                    benefit_type VARCHAR(50),
-                    employer_rate DECIMAL(5,2),
-                    employee_rate DECIMAL(5,2),
-                    fixed_amount DECIMAL(10,2),
-                    calculation_period VARCHAR(20) DEFAULT 'Monthly',
-                    is_percentage_based TINYINT DEFAULT 1,
-                    gl_code_expense VARCHAR(20),
-                    gl_code_liability VARCHAR(20),
-                    provider VARCHAR(100),
-                    description TEXT,
-                    is_active TINYINT DEFAULT 1,
-                    is_mandatory TINYINT DEFAULT 0,
-                    is_tax_deductible TINYINT DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (benefit_id),
-                    KEY idx_code (benefit_code)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            'ksf_hrm_employee_benefits' => "
-                CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_employee_benefits (
-                    id INT NOT NULL AUTO_INCREMENT,
-                    person_id INT(11) NOT NULL COMMENT 'FK to 0_crm_persons',
-                    benefit_id INT NOT NULL,
-                    effective_date DATE DEFAULT NULL,
-                    end_date DATE DEFAULT NULL,
-                    custom_employer_rate DECIMAL(5,2) DEFAULT NULL,
-                    custom_employee_rate DECIMAL(5,2) DEFAULT NULL,
-                    notes TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (id),
-                    KEY idx_person (person_id),
-                    KEY idx_benefit (benefit_id),
-                    CONSTRAINT `fk_emp_benefit_person` FOREIGN KEY (`person_id`) REFERENCES `" . TB_PREF . "crm_persons`(`id`) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            'ksf_hrm_payroll' => "
-                CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_payroll (
-                    payroll_id INT NOT NULL AUTO_INCREMENT,
-                    person_id INT(11) NOT NULL COMMENT 'FK to 0_crm_persons (employee)',
-                    pay_period_start DATE NOT NULL,
-                    pay_period_end DATE NOT NULL,
-                    gross_pay DECIMAL(15,2) DEFAULT 0,
-                    total_deductions DECIMAL(15,2) DEFAULT 0,
-                    net_pay DECIMAL(15,2) DEFAULT 0,
-                    pay_date DATE NOT NULL,
-                    status VARCHAR(20) DEFAULT 'Draft',
-                    gl_posted TINYINT DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (payroll_id),
-                    KEY idx_person (person_id),
-                    KEY idx_period (pay_period_start, pay_period_end),
-                    CONSTRAINT `fk_payroll_person` FOREIGN KEY (`person_id`) REFERENCES `" . TB_PREF . "crm_persons`(`id`) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            'ksf_hrm_payroll_entries' => "
-                CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_payroll_entries (
-                    entry_id INT NOT NULL AUTO_INCREMENT,
-                    payroll_id INT NOT NULL,
-                    element_id INT(11) NOT NULL,
-                    amount DECIMAL(15,2) DEFAULT 0,
-                    note VARCHAR(255) DEFAULT NULL,
-                    PRIMARY KEY (entry_id),
-                    KEY idx_payroll (payroll_id),
-                    KEY idx_element (element_id)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            'ksf_hrm_leave_balances' => "
-                CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_leave_balances (
-                    balance_id INT NOT NULL AUTO_INCREMENT,
-                    person_id INT(11) NOT NULL,
-                    leave_type_id INT(11) NOT NULL,
-                    year INT(4) NOT NULL,
-                    allocated_days DECIMAL(5,2) DEFAULT 0,
-                    used_days DECIMAL(5,2) DEFAULT 0,
-                    carried_over DECIMAL(5,2) DEFAULT 0,
-                    PRIMARY KEY (balance_id),
-                    UNIQUE KEY idx_person_year_type (person_id, year, leave_type_id),
-                    CONSTRAINT `fk_leave_person` FOREIGN KEY (`person_id`) REFERENCES `" . TB_PREF . "crm_persons`(`id`) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-        ];
-
-        foreach ($tables as $table => $sql) {
-            if (!db_has_table(TB_PREF . $table)) {
-                db_query($sql, "Failed to create $table");
-            }
-        }
+        // FA's update_databases handles multiple SQL files automatically
+        // Files are processed in dependency order: shared tables first, then HRM-specific
+        $updates = array(
+            // Shared tables (owned by HRM, used by CRM/Recruitment)
+            'sql/fa_contacts_pii.sql' => array('ksf_FA_HRM'),
+            'sql/fa_contacts_banking.sql' => array('ksf_FA_HRM'),
+            'sql/fa_contacts_employment.sql' => array('ksf_FA_HRM'),
+            'sql/fa_dependent_details.sql' => array('ksf_FA_HRM'),
+            'sql/fa_departments.sql' => array('ksf_FA_HRM'),
+            'sql/fa_positions.sql' => array('ksf_FA_HRM'),
+            'sql/fa_grades.sql' => array('ksf_FA_HRM'),
+            'sql/fa_pay_elements.sql' => array('ksf_FA_HRM'),
+            'sql/fa_salary_structure.sql' => array('ksf_FA_HRM'),
+            'sql/fa_separation_reasons.sql' => array('ksf_FA_HRM'),
+            // HRM-specific tables
+            'sql/ksf_hrm_benefits.sql' => array('ksf_FA_HRM'),
+            'sql/ksf_hrm_employee_benefits.sql' => array('ksf_FA_HRM'),
+            'sql/ksf_hrm_payroll.sql' => array('ksf_FA_HRM'),
+            'sql/ksf_hrm_leave_balances.sql' => array('ksf_FA_HRM'),
+            // CRM categories for employee/emergency/dependent contact types
+            'sql/crm_categories.sql' => array('ksf_FA_HRM')
+        );
+        
+        return self::update_databases($company, $updates, $check_only);
     }
 
     private static function createMenuItems(): void
@@ -160,6 +80,7 @@ class InstallHook
 
     public static function uninstall(): void
     {
+        // Drop HRM-specific tables
         $tables = [
             'ksf_hrm_benefits',
             'ksf_hrm_employee_benefits',
@@ -173,5 +94,10 @@ class InstallHook
                 db_query("DROP TABLE " . TB_PREF . $table);
             }
         }
+
+        // Note: Shared tables (fa_*) are NOT dropped here
+        // They may be used by CRM, Recruitment, etc.
+        // Remove crm_categories entries for employee types
+        db_query("DELETE FROM " . TB_PREF . "crm_categories WHERE `type` = 'employee'");
     }
 }
