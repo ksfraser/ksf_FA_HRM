@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Ksf\FA\HRM\GL;
+namespace Ksfraser\GL;
 
 use Ksf\HRM\Entity\EmployeeCompensation;
 use Ksf\HRM\Entity\Benefit;

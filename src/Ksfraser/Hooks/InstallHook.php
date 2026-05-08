@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Ksf\FA\HRM\Hooks;
+namespace Ksfraser\Hooks;
 
 /**
  * HRM Install Hook

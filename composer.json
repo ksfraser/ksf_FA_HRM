@@ -10,7 +10,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Ksf\\FA\\HRM\\": "src/"
+            "Ksfraser\\": "src/Ksfraser/"
         }
     },
     "minimum-stability": "dev",
