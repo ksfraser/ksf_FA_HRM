@@ -1,0 +1,3 @@
+-- ksf_FA_HRM Module Schema
+-- Placeholder: Add module-specific tables here
+-- Uses @TB_PREF@ for table prefix
