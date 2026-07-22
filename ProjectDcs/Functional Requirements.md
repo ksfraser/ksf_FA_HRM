@@ -294,19 +294,28 @@ $hasKey = hook_invoke('ksf_FA_GPG', 'hasCapability', $data, ['capability' => 'si
 
 ### 8.4 GPG Email Integration
 
-**FR-HRM-076**: The system shall support GPG signing of employee communications.
-**FR-HRM-077**: The system shall support GPG encryption when encrypt flag is set.
+**FR-HRM-076**: The system shall support GPG signing of employee communications (via EmailManager).
+**FR-HRM-077**: The system shall support GPG encryption of attachments BEFORE calling EmailManager.
+**FR-HRM-078**: EmailManager ONLY signs - HRM is responsible for encryption.
+
+#### Architecture Note
+```
+HRM flow: encrypt file → save encrypted version → call EmailManager → signs + sends
+```
 
 #### Implementation TODO
 ```php
-// TODO: Add GPG signing to employee email sending
+// TODO: Add GPG encryption to employee email sending
+// When sending email with sensitive attachment:
+$encryptedPath = $gpgService->encryptForContact($attachmentPath, $employeeEmail);
+// Save encrypted file, then call EmailManager:
 $data = [
     'contact_type' => 'employee',
     'contact_id' => $person_id,
     'email' => $employeeEmail,
-    'file_path' => $attachmentPath,
+    'file_path' => $encryptedPath,  // Pass encrypted file
 ];
-hook_invoke_all('gpg_sign', $data);
+hook_invoke_all('gpg_sign', $data);  // EmailManager signs only
 ```
 
 ---
