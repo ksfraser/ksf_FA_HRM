@@ -272,6 +272,43 @@ This document outlines the functional requirements for the Human Resources Manag
 
 **FR-HRM-071**: The system shall integrate with timesheet module for time tracking.
 
+### 8.3 GPG Key Management for Employees
+
+**FR-HRM-072**: The system shall provide a link to manage GPG keys for each employee.
+**FR-HRM-073**: The system shall call the common GPG key management screen with `contact_type=employee`.
+**FR-HRM-074**: The system shall display GPG key status on employee summary.
+**FR-HRM-075**: The system shall support GPG signing of employee documents.
+
+#### Implementation TODO
+```php
+// TODO: Add GPG key management link to employee page
+// In employee detail view:
+echo "<a href='modules/ksf_FA_GPG/pages/key_management.php?contact_type=employee&contact_id=" . $person_id . "'>";
+echo _("Manage GPG Key");
+echo "</a>";
+
+// TODO: Display GPG key status on employee summary
+$data = ['contact_type' => 'employee', 'contact_id' => $person_id];
+$hasKey = hook_invoke('ksf_FA_GPG', 'hasCapability', $data, ['capability' => 'sign']);
+```
+
+### 8.4 GPG Email Integration
+
+**FR-HRM-076**: The system shall support GPG signing of employee communications.
+**FR-HRM-077**: The system shall support GPG encryption when encrypt flag is set.
+
+#### Implementation TODO
+```php
+// TODO: Add GPG signing to employee email sending
+$data = [
+    'contact_type' => 'employee',
+    'contact_id' => $person_id,
+    'email' => $employeeEmail,
+    'file_path' => $attachmentPath,
+];
+hook_invoke_all('gpg_sign', $data);
+```
+
 ---
 
 ## 9. Non-Functional Requirements
