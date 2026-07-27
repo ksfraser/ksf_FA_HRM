@@ -21,16 +21,65 @@ CREATE TABLE IF NOT EXISTS `0_fa_departments` (
     KEY `idx_manager` (`manager_person_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Positions
-CREATE TABLE IF NOT EXISTS `0_fa_positions` (
-    `position_id` INT(11) NOT NULL AUTO_INCREMENT,
-    `position_code` VARCHAR(20) DEFAULT NULL,
-    `position_name` VARCHAR(100) NOT NULL,
+-- Role Dictionary (global master list of role types)
+CREATE TABLE IF NOT EXISTS `0_fa_role_dictionary` (
+    `role_dict_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `role_name` VARCHAR(100) NOT NULL,
+    `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`role_dict_id`),
+    UNIQUE KEY `idx_name` (`role_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Department Roles (cloned from dictionary into each department)
+CREATE TABLE IF NOT EXISTS `0_fa_roles` (
+    `role_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `department_id` INT(11) NOT NULL,
+    `role_dict_id` INT(11) DEFAULT NULL COMMENT 'Source from dictionary',
+    `role_name` VARCHAR(100) NOT NULL COMMENT 'Can be customized per dept',
     `description` TEXT,
     `is_active` TINYINT(1) DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`position_id`)
+    PRIMARY KEY (`role_id`),
+    KEY `idx_department` (`department_id`),
+    KEY `idx_dict` (`role_dict_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Teams (recursive, within a department)
+CREATE TABLE IF NOT EXISTS `0_fa_teams` (
+    `team_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `department_id` INT(11) NOT NULL,
+    `parent_team_id` INT(11) DEFAULT NULL COMMENT 'Self-referential for sub-teams',
+    `team_code` VARCHAR(20) NOT NULL COMMENT 'Short code for position codes (e.g., SUP, DEV)',
+    `team_name` VARCHAR(100) NOT NULL,
+    `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`team_id`),
+    UNIQUE KEY `idx_dept_code` (`department_id`, `team_code`),
+    KEY `idx_parent` (`parent_team_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Positions (role filled within a team; code = DEPT-TEAM-###)
+CREATE TABLE IF NOT EXISTS `0_fa_positions` (
+    `position_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `position_code` VARCHAR(50) NOT NULL COMMENT 'Generated: DEPT-TEAM-###',
+    `department_id` INT(11) NOT NULL,
+    `team_id` INT(11) DEFAULT NULL,
+    `role_id` INT(11) NOT NULL,
+    `position_number` INT(11) NOT NULL DEFAULT 1 COMMENT 'Sequential within dept-team',
+    `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`position_id`),
+    UNIQUE KEY `idx_code` (`position_code`),
+    KEY `idx_department` (`department_id`),
+    KEY `idx_team` (`team_id`),
+    KEY `idx_role` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Grades
@@ -257,3 +306,26 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_types` (
     PRIMARY KEY (`leave_type_id`),
     UNIQUE KEY `idx_code` (`type_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Role Dictionary seed data
+INSERT IGNORE INTO `0_fa_role_dictionary` (role_dict_id, role_name, description) VALUES
+(1, 'Manager', 'Team or department manager'),
+(2, 'Assistant Manager', 'Deputy to the manager'),
+(3, 'Team Lead', 'Leads a small team'),
+(4, 'Supervisor', 'Supervises operational staff'),
+(5, 'Coordinator', 'Coordinates activities across teams'),
+(6, 'Analyst', 'Data or business analysis'),
+(7, 'Developer', 'Software development'),
+(8, 'Engineer', 'Engineering or technical role'),
+(9, 'Technician', 'Technical support or maintenance'),
+(10, 'Administrator', 'Administrative support'),
+(11, 'Officer', 'General officer role'),
+(12, 'Specialist', 'Domain specialist'),
+(13, 'Consultant', 'Advisory or consulting role'),
+(14, 'Representative', 'Customer or vendor facing'),
+(15, 'Agent', 'Operational agent'),
+(16, 'Director', 'Senior leadership'),
+(17, 'Executive', 'C-level or senior executive'),
+(18, 'Intern', 'Temporary learning position'),
+(19, 'Contractor', 'External contracted role'),
+(20, 'Trainee', 'Entry-level training position');

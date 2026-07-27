@@ -18,10 +18,21 @@ $show_form = isset($_GET['add']);
 $edit_mode = isset($_GET['edit']);
 $edit_row = null;
 if ($edit_mode) {
-    $edit_id = (int)$_GET['edit'];
-    $edit_row = get_position($edit_id);
+    $edit_row = get_position((int)$_GET['edit']);
     $show_form = true;
 }
+
+$departments = get_departments();
+
+// Pre-fetch teams/roles for selected department (for Add form)
+$selected_dept = 0;
+if ($show_form) {
+    $selected_dept = $edit_mode ? ($edit_row['department_id'] ?? 0) : (int)($_POST['department_id'] ?? 0);
+}
+$teams_for_dept = $selected_dept > 0 ? get_teams_for_department($selected_dept) : null;
+$roles_for_dept = $selected_dept > 0 ? get_roles_for_department($selected_dept) : null;
+
+$positions = get_positions_list();
 ?>
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -39,36 +50,92 @@ if ($edit_mode) {
                 <?php else: ?>
                     <input type="hidden" name="save_position" value="1">
                 <?php endif; ?>
+
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="position_code"><?php echo _("Code"); ?></label>
-                            <input type="text" class="form-control" id="position_code" name="position_code" required maxlength="20"
-                                value="<?php echo htmlspecialchars($edit_row['position_code'] ?? ''); ?>">
+                            <label><?php echo _("Department"); ?></label>
+                            <select class="form-control" name="department_id" id="dept_select" required>
+                                <option value=""><?php echo _("-- Select Department --"); ?></option>
+                            <?php
+                            if ($departments) {
+                                while ($d = db_fetch_assoc($departments)) {
+                                    $sel = ($selected_dept == $d['department_id']) ? 'selected' : '';
+                                    echo '<option value="' . (int)$d['department_id'] . '" ' . $sel . '>'
+                                         . htmlspecialchars($d['department_code'] . ' - ' . $d['department_name'])
+                                         . '</option>';
+                                }
+                            }
+                            ?>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="position_name"><?php echo _("Name"); ?></label>
-                            <input type="text" class="form-control" id="position_name" name="position_name" required maxlength="100"
-                                value="<?php echo htmlspecialchars($edit_row['position_name'] ?? ''); ?>">
+                            <label><?php echo _("Team"); ?></label>
+                            <select class="form-control" name="team_id" id="team_select">
+                                <option value="0"><?php echo _("-- No Team (General) --"); ?></option>
+                            <?php
+                            if ($teams_for_dept) {
+                                while ($t = db_fetch_assoc($teams_for_dept)) {
+                                    $sel = ($edit_mode && $edit_row['team_id'] == $t['team_id']) ? 'selected' : '';
+                                    echo '<option value="' . (int)$t['team_id'] . '" ' . $sel . '>'
+                                         . htmlspecialchars($t['team_code'] . ' - ' . $t['team_name'])
+                                         . '</option>';
+                                }
+                            }
+                            ?>
+                            </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group">
-                            <label for="description"><?php echo _("Description"); ?></label>
-                            <textarea class="form-control" id="description" name="description" rows="1"><?php echo htmlspecialchars($edit_row['description'] ?? ''); ?></textarea>
+                            <label><?php echo _("Role"); ?></label>
+                            <select class="form-control" name="role_id" id="role_select" required>
+                                <option value=""><?php echo _("-- Select Role --"); ?></option>
+                            <?php
+                            if ($roles_for_dept) {
+                                while ($r = db_fetch_assoc($roles_for_dept)) {
+                                    $sel = ($edit_mode && $edit_row['role_id'] == $r['role_id']) ? 'selected' : '';
+                                    echo '<option value="' . (int)$r['role_id'] . '" ' . $sel . '>'
+                                         . htmlspecialchars($r['role_name'])
+                                         . '</option>';
+                                }
+                            }
+                            ?>
+                            </select>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label>&nbsp;</label>
                             <div class="form-check mt-2">
-                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1"
+                                <input type="checkbox" class="form-check-input" name="is_active" value="1"
                                     <?php echo (!$edit_mode || ($edit_row['is_active'] ?? 1)) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="is_active"><?php echo _("Active"); ?></label>
+                                <label class="form-check-label"><?php echo _("Active"); ?></label>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><?php echo _("Description"); ?></label>
+                            <textarea class="form-control" name="description" rows="2"><?php echo htmlspecialchars($edit_row['description'] ?? ''); ?></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <?php if ($edit_mode && $edit_row): ?>
+                        <div class="form-group">
+                            <label><?php echo _("Position Code"); ?></label>
+                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($edit_row['position_code']); ?>" readonly disabled>
+                        </div>
+                        <?php else: ?>
+                        <div class="form-group">
+                            <label><?php echo _("Position Code"); ?></label>
+                            <input type="text" class="form-control" value="<?php echo _("Auto-generated"); ?>" readonly disabled>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-success btn-sm"><?php echo _("Save"); ?></button>
@@ -81,36 +148,31 @@ if ($edit_mode) {
             <thead class="thead-dark">
                 <tr>
                     <th><?php echo _("Code"); ?></th>
-                    <th><?php echo _("Name"); ?></th>
-                    <th><?php echo _("Description"); ?></th>
+                    <th><?php echo _("Department"); ?></th>
+                    <th><?php echo _("Team"); ?></th>
+                    <th><?php echo _("Role"); ?></th>
                     <th class="text-center"><?php echo _("Status"); ?></th>
                     <th class="text-right"><?php echo _("Action"); ?></th>
                 </tr>
             </thead>
             <tbody>
             <?php
-            $result = db_query(
-                "SELECT position_id, position_code, position_name, description, is_active
-                FROM " . TB_PREF . "fa_positions
-                ORDER BY position_name",
-                _("Could not query positions")
-            );
-
-            if (db_num_rows($result) == 0) {
-                echo '<tr><td colspan="5" class="text-center text-muted">' . _("No positions found.") . '</td></tr>';
-            } else {
-                while ($row = db_fetch_assoc($result)) {
+            if ($positions && db_num_rows($positions)) {
+                while ($row = db_fetch_assoc($positions)) {
                     $badge = $row['is_active']
                         ? '<span class="badge badge-success">' . _("Active") . '</span>'
                         : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
                     echo '<tr>';
-                    echo '<td>' . html_entity_decode($row['position_code']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['position_name']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['description']) . '</td>';
+                    echo '<td><strong>' . html_entity_decode($row['position_code']) . '</strong></td>';
+                    echo '<td>' . html_entity_decode($row['department_code'] ?? '') . '</td>';
+                    echo '<td>' . html_entity_decode($row['team_code'] ?? '—') . '</td>';
+                    echo '<td>' . html_entity_decode($row['role_name'] ?? '') . '</td>';
                     echo '<td class="text-center">' . $badge . '</td>';
                     echo '<td class="text-right"><a href="?view=positions&edit=' . (int)$row['position_id'] . '" class="btn btn-outline-secondary btn-sm">' . _("Edit") . '</a></td>';
                     echo '</tr>';
                 }
+            } else {
+                echo '<tr><td colspan="6" class="text-center text-muted">' . _("No positions found.") . '</td></tr>';
             }
             ?>
             </tbody>
@@ -122,6 +184,20 @@ if ($edit_mode) {
 document.getElementById('toggle-add').addEventListener('click', function(e) {
     e.preventDefault();
     var form = document.getElementById('add-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    } else {
+        window.location.href = '?view=positions&add=1';
+    }
 });
+
+var deptSelect = document.getElementById('dept_select');
+if (deptSelect) {
+    deptSelect.addEventListener('change', function() {
+        var deptId = this.value;
+        if (deptId > 0) {
+            window.location.href = '?view=positions&add=1&dept=' + deptId;
+        }
+    });
+}
 </script>
