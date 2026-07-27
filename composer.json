@@ -1,12 +1,17 @@
 {
     "name": "ksfraser/ksf_fa_hrm",
-    "description": "FA module adapter",
-    "type": "project",
+    "description": "HRM Module for FrontAccounting - Employee management, org hierarchy, payroll, benefits",
+    "type": "frontaccounting-module",
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ksfraser\\FrontAccounting\\HRM\\": "src/"
+        }
     },
     "minimum-stability": "stable"
 }

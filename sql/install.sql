@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS `0_hrm_pay_periods` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Pay Elements (earnings, deductions, contributions)
-CREATE TABLE IF NOT EXISTS `0_fa_pay_elements` (
+CREATE TABLE IF NOT EXISTS `0_hrm_pay_elements` (
     `element_id` INT(11) NOT NULL AUTO_INCREMENT,
     `element_code` VARCHAR(20) NOT NULL,
     `element_name` VARCHAR(100) NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_pay_elements` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Salary Structure (links grade to pay elements)
-CREATE TABLE IF NOT EXISTS `0_fa_salary_structure` (
+CREATE TABLE IF NOT EXISTS `0_hrm_salary_structure` (
     `structure_id` INT(11) NOT NULL AUTO_INCREMENT,
     `grade_id` INT(11) NOT NULL,
     `element_id` INT(11) NOT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_salary_structure` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Separation Reasons
-CREATE TABLE IF NOT EXISTS `0_fa_separation_reasons` (
+CREATE TABLE IF NOT EXISTS `0_hrm_separation_reasons` (
     `reason_id` INT(11) NOT NULL AUTO_INCREMENT,
     `reason_code` VARCHAR(20) NOT NULL,
     `reason_name` VARCHAR(100) NOT NULL,
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS `0_hrm_contacts_employment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- PII (Personally Identifiable Information) - separated for security
-CREATE TABLE IF NOT EXISTS `0_fa_contacts_pii` (
+CREATE TABLE IF NOT EXISTS `0_hrm_contacts_pii` (
     `pii_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id',
     `date_of_birth` DATE DEFAULT NULL,
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_contacts_pii` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Banking Details
-CREATE TABLE IF NOT EXISTS `0_fa_contacts_banking` (
+CREATE TABLE IF NOT EXISTS `0_hrm_contacts_banking` (
     `banking_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id',
     `bank_name` VARCHAR(100) DEFAULT NULL,
@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_contacts_banking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dependent Details
-CREATE TABLE IF NOT EXISTS `0_fa_dependent_details` (
+CREATE TABLE IF NOT EXISTS `0_hrm_dependent_details` (
     `dependent_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id (employee)',
     `dependent_name` VARCHAR(100) NOT NULL,

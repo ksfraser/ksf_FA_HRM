@@ -1,200 +1,110 @@
-# AGENTS.md - ksf_FA_HRM#
+# AGENTS.md - ksf_FA_HRM
 
-## Architecture Overview#
+## Overview
 
-This repository follows a **Layered Architecture** with clear separation of concerns:
+FA Module for Human Resources Management - org hierarchy (departments, teams, roles, positions), employee management via CRM contacts, compensation, payroll, benefits, and leave types admin.
 
-### Core Principles#
-- **SOLID**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion#
-- **DRY**: Don't Repeat Yourself - extract reusable logic#
-- **TDD**: Test-Driven Development - write tests first#
-- **DI**: Dependency Injection - inject dependencies, don't hardcode#
-- **SRP**: Single Responsibility Principle - each class has one reason to change#
+### Core Principles
+- SOLID, DRY, TDD, DI, SRP
 
-## Repository Structure#
+## Namespace Convention
 
-```
-ksf_FA_HRM/
-├── sql/                    # Database schemas (FA TB_PREF tables)
-│   ├── fa_contacts_pii.sql
-│   ├── fa_contacts_banking.sql
-│   ├── fa_contacts_employment.sql
-│   ├── fa_dependent_details.sql
-│   ├── fa_departments.sql
-│   ├── fa_positions.sql
-│   ├── fa_grades.sql
-│   ├── fa_pay_elements.sql
-│   ├── fa_salary_structure.sql
-│   ├── fa_separation_reasons.sql
-│   ├── ksf_hrm_benefits.sql
-│   ├── ksf_hrm_employee_benefits.sql
-│   ├── ksf_hrm_payroll.sql
-│   └── ksf_hrm_leave_balances.sql
-├── includes/              # FA-specific DB classes
-│   ├── benefits_db.inc
-│   ├── employee_benefits_db.inc
-│   ├── payroll_db.inc
-│   └── leave_db.inc
-├── src/                    # Business logic (namespace: Ksf\FA\HRM\)
-│   ├── Hooks/
-│   │   └── InstallHook.php
-│   ├── Services/
-│   └── Models/
-├── pages/                 # UI pages (FA admin)
-├── composer.json
-└── ProjectDocs/           # Project documentation
-    ├── Requirements.md
-    ├── RTM.md            # Requirements Traceability Matrix
-    ├── BABOK.md         # Business Analysis Body of Knowledge
-    └── UML.md           # UML diagrams
-```
-
-## Coding Standards#
-
-### PHP Compatibility#
-- **Target**: PHP 7.3+ (with eye to PHP 8.x upgrades)#
-- Use `declare(strict_types=1);` at top of all PHP files#
-- Avoid PHP 8+ features until we drop PHP 7.3 support#
-
-### Naming Conventions#
-- **HRM tables**: `fa_*` (shared) and `ksf_hrm_*` (HRM-specific)#
-- **Install Hook**: `src/Hooks/InstallHook.php` (PSR-4)#
-- **FA DB files**: `{table_name}_db.inc`#
-
-### Documentation (UML/BABOK)#
-```php
-/**
- * Calculate payroll for employee
- * 
- * @param int $person_id The CRM person ID (employee)
- * @param array $period Pay period [start, end]
- * @return array Payroll data with earnings/deductions
- * 
- * @UML Note: See ProjectDocs/UML.md - Payroll Processing sequence diagram
- * @BABOK Related: BR-005 Payroll Management
- */
-function calculate_payroll($person_id, $period) { ... }
-```
-
-## Testing Strategy#
-
-### TDD Red-Green-Refactor#
-1. **RED**: Write failing test#
-2. **GREEN**: Write minimal code to pass#
-3. **REFACTOR**: Improve code while keeping tests green#
-
-## Design Patterns Used#
-
-### Table Gateway Pattern#
-- Each `fa_*` and `ksf_hrm_*` table has corresponding `_db.inc` file#
-- Functions: `write_`, `get_`, `delete_` for CRUD operations#
-
-### Hook Pattern (FA Native)#
-- Uses FA's `update_databases()` for multi-SQL file handling#
-- `activate()` method processes SQL files in dependency order#
-
-### Table Ownership#
-- **HRM owns**: `fa_positions`, `fa_grades`, `fa_pay_elements`, `fa_salary_structure`, `fa_separation_reasons`#
-- **HRM owns (employment-specific)**: `fa_contacts_employment`, `fa_contacts_pii`, `fa_contacts_banking`, `fa_dependent_details`, `fa_departments`#
-- **HRM-specific**: `ksf_hrm_benefits`, `ksf_hrm_employee_benefits`, `ksf_hrm_payroll`, `ksf_hrm_leave_balances`#
-
-## Version Tagging#
-
-Follow Semantic Versioning (SemVer): `MAJOR.MINOR.PATCH`#
-
-```bash
-git tag -a v1.0.0 -m "Initial HRM module with employment management"
-git push origin v1.0.0
-```
-
-## Composer/Packagist#
+- **FA Platform modules**: `ksfraser\FrontAccounting\<ModuleName>\`
+- **Current**: `ksfraser\FrontAccounting\HRM\`
+- **Directory**: `src/` with PSR-4 autoload
 
 ```json
-{
-    "name": "ksfraser/ksf_fa_hrm",
-    "description": "HRM Module for FrontAccounting",
-    "type": "frontaccounting-module",
-    "require": {
-        "php": ">=7.3",
-        "ksfraser/ksf_fa_crm": "*",
-        "ksfraser/ksf_fa_hrm_core": "*"
-    },
-    "autoload": {
-        "psr-4": {
-            "Ksf\\FA\\HRM\\": "src/"
-        }
+"autoload": {
+    "psr-4": {
+        "ksfraser\\FrontAccounting\\HRM\\": "src/"
     }
 }
 ```
 
-## RTM (Requirements Traceability Matrix)#
+## Table Ownership
 
-See `ProjectDocs/RTM.md` for full traceability:#
+### HRM Core Tables (`0_hrm_*`)
+| Table | Purpose |
+|-------|---------|
+| `0_hrm_departments` | Department hierarchy (parent_id recursion) |
+| `0_hrm_teams` | Teams within departments (recursive via parent_team_id) |
+| `0_hrm_role_dictionary` | Global master list of role types (20 seeded) |
+| `0_hrm_roles` | Department-scoped roles (cloned from dictionary) |
+| `0_hrm_positions` | Positions with auto-generated DEPT-TEAM-### codes |
+| `0_hrm_grades` | Salary grades with min/max ranges |
+| `0_hrm_contacts_employment` | Core employee record (FK to 0_crm_persons) |
+| `0_ksf_hrm_employment_status` | Status lookup (Active, Probation, etc.) |
 
-| Req ID | Description | Test Case | Code File | Version |
-|--------|-------------|-----------|----------|---------|
-| REQ-001 | Employee as Contact | testEmployeeCreation | sql/fa_contacts_employment.sql | v1.0.0 |
-| REQ-002 | PII Separation | testPiiStorage | sql/fa_contacts_pii.sql | v1.0.0 |
-| REQ-003 | Salary Structure | testSalaryCalc | sql/fa_salary_structure.sql | v1.1.0 |
-| REQ-004 | Payroll Processing | testPayrollCalc | includes/payroll_db.inc | v1.2.0 |
+### Compensation & Payroll Tables
+| Table | Purpose |
+|-------|---------|
+| `0_hrm_work_assignments` | Links employee to position + salary + grade |
+| `0_hrm_pay_rate_history` | Salary change audit trail (effective_date-based) |
+| `0_hrm_pay_periods` | Pay period definitions |
+| `0_hrm_pay_elements` | Earnings, deductions, contributions |
+| `0_hrm_salary_structure` | Links grades to pay elements |
+| `0_hrm_separation_reasons` | Termination reason lookup |
+| `0_ksf_hrm_benefits` | Benefit definitions |
+| `0_ksf_hrm_employee_benefits` | Employee benefit assignments |
+| `0_ksf_hrm_payroll` | Payroll run records |
+| `0_ksf_hrm_payroll_entries` | Payroll line items |
 
-## BABOK Alignment#
+### Employee Detail Tables (`0_hrm_*`)
+| Table | Purpose |
+|-------|---------|
+| `0_hrm_contacts_pii` | PII data (DOB, national ID, tax number) |
+| `0_hrm_contacts_banking` | Bank account details |
+| `0_hrm_dependent_details` | Employee dependents |
 
-See `ProjectDocs/BABOK.md` for business analysis alignment:#
+### NOT Owned by HRM
+- **Leave tables** → `ksf_FA_Leave` module (`0_leave_*`)
+- **Recruitment tables** → `ksf_FA_Recruitment` module (`0_recruit_*`)
+- **FA security roles** → `0_security_roles` (access control only)
+- **RBAC teams** → `ksf_RBAC` module (record-level access control)
 
-### Business Requirements (BABOK)#
-- **BR-004**: Employee Management - Employees as CRM contacts#
-- **BR-005**: Payroll Management - Salary calculations with grade/position#
-- **BR-006**: Benefits Administration - Employee benefit assignments#
-- **BR-007**: Leave Management - Leave balances and requests#
+## Org Hierarchy
 
-## UML Documentation#
-
-See `ProjectDocs/UML.md` for:#
-- Class diagrams#
-- Sequence diagrams#
-- Component diagrams#
-
-### Example: Employee Onboarding Sequence#
 ```
-HR -> HRM: Create Employee
-HRM -> CRM: create_contact(type='employee')
-CRM -> DB: Insert 0_crm_persons
-HRM -> DB: Insert fa_contacts_employment
-HRM -> DB: Insert fa_contacts_pii
-HRM -> User: Display success
+Departments
+  └── Teams (recursive, team_code used in position code)
+        └── Roles (from global dictionary, cloned per dept)
+              └── Positions (DEPT-TEAM-###, e.g., IT-SUP-001)
 ```
 
-## Dependencies#
+## Repository Structure
 
-- **ksf_FA_HRM_Core** (business logic - framework-agnostic)#
-- **ksf_FA_CRM** (contact system)#
-- **FrontAccounting 2.4+** (FA core)#
-- **0_crm_persons** (FA built-in table)#
+```
+ksf_FA_HRM/
+├── sql/
+│   └── install.sql          # All HRM tables (0_ prefix)
+├── includes/
+│   ├── employee_db.inc      # Employee/department/position/grade CRUD
+│   ├── payroll_db.inc       # Payroll queries
+│   └── leave_db.inc         # Leave balance queries
+├── src/
+│   ├── Hooks/
+│   │   └── InstallHook.php  # Module lifecycle
+│   └── GL/
+│       └── PayrollGLentries.php  # GL posting
+├── pages/
+│   ├── employees.php        # Employee list + add/edit
+│   ├── departments.php      # Org hierarchy
+│   ├── positions.php        # Position management
+│   ├── grades.php           # Grade management
+│   ├── payroll.php          # Payroll view
+│   ├── benefits.php         # Benefits management
+│   ├── leave.php            # Leave balances view
+│   ├── leave_types.php      # Leave types admin
+│   ├── recruitment.php      # Recruitment placeholder
+│   └── reports.php          # Reports placeholder
+├── hooks.php
+├── index.php
+├── composer.json
+└── ProjectDcs/
+```
 
-## Development Workflow
+## Dependencies
 
-All development is done in the **devel tree** (`~/Documents/ksf_FA_HRM`). Do **not** edit files in the UAT bind point directly.
-
-### Workflow Steps
-1. **Develop** in this repo (feature branches preferred)
-2. **Test**: run repo-appropriate tests
-3. **Lint**: `php -l` on modified PHP files (no syntax errors)
-4. **Commit** and **Push** branch to GitHub
-5. **Merge** to `master` when ready
-6. **Push** `master` to GitHub
-7. **Deploy** to UAT by pulling in the Infrastructure bind point:
-
-   ```
-   cd ~/ksf_Infrastructure/fa_modules/ksf_FA_HRM
-   git stash -u
-   git pull origin master
-   git stash pop
-   ```
-
-### UAT Bind Point
-| Path | Purpose |
-|------|---------|
-| `~/Documents/ksf_FA_HRM` | Devel tree — all development, testing, commits |
-| `~/ksf_Infrastructure/fa_modules/ksf_FA_HRM` | UAT bind point — deployment target, integration testing (if mirrored) |
-
+- FrontAccounting 2.4+ (core)
+- ksf_FA_CRM (contact system - 0_crm_persons)
+- PHP >=7.3

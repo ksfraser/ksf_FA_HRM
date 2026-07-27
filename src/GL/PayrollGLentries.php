@@ -2,21 +2,35 @@
 
 declare(strict_types=1);
 
-namespace Ksfraser\GL;
+namespace ksfraser\FrontAccounting\HRM\GL;
 
-use Ksf\HRM\Entity\EmployeeCompensation;
-use Ksf\HRM\Entity\Benefit;
-use Ksf\HRM\Service\CompensationService;
-
+/**
+ * Payroll GL Entry Generator
+ *
+ * Creates journal entries for payroll processing and posts them
+ * to FA's general ledger via write_journal().
+ *
+ * GL code mapping is configurable per company via preferences:
+ * - ksf_salary_expense_gl
+ * - ksf_ot_expense_gl
+ * - ksf_vacation_expense_gl
+ * - ksf_sick_expense_gl
+ * - ei/cpp/pension/health expense and liability accounts
+ *
+ * @package ksfraser\FrontAccounting\HRM
+ * @since 1.0.0
+ */
 class PayrollGLentries
 {
-    private CompensationService $compensationService;
-
-    public function __construct(?CompensationService $compensationService = null)
-    {
-        $this->compensationService = $compensationService ?? new CompensationService();
-    }
-
+    /**
+     * Create a journal entry array for a payroll run.
+     *
+     * @param int $employeeId The employee's person_id
+     * @param array $glEntries Array of GL line items with type/amount/account
+     * @param string $description Journal entry description
+     * @param int|null $reference Optional reference number
+     * @return array Structured journal entry ready for write_journal()
+     */
     public function createJournalEntry(int $employeeId, array $glEntries, string $description, ?int $reference = null): array
     {
         return [
@@ -30,12 +44,14 @@ class PayrollGLentries
         ];
     }
 
+    /**
+     * Post a payroll journal entry to FA's GL.
+     *
+     * @param array $journalEntry Structured journal entry
+     * @return bool True on success
+     */
     public function postPayrollToGL(array $journalEntry): bool
     {
-        global $db_connections;
-        
-        $this->ensureGLtableExists();
-        
         $result = write_journal(
             $journalEntry['date'],
             $journalEntry['reference'],
@@ -48,30 +64,19 @@ class PayrollGLentries
         return $result;
     }
 
+    /**
+     * Generate a unique reference for payroll entries.
+     */
     private function generateReference(): string
     {
         return 'PR-' . date('Ym') . '-' . str_pad((string)(rand(1, 999)), 3, '0', STR_PAD_LEFT);
     }
 
-    private function ensureGLtableExists(): void
-    {
-        $sql = "
-        CREATE TABLE IF NOT EXISTS " . TB_PREF . "ksf_hrm_payroll (
-            id INT NOT NULL AUTO_INCREMENT,
-            employee_id INT NOT NULL,
-            period_start DATE NOT NULL,
-            period_end DATE NOT NULL,
-            gross_pay DECIMAL(15,2) NOT NULL,
-            net_pay DECIMAL(15,2) NOT NULL,
-            gl_reference VARCHAR(50),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY  (id),
-            KEY employee_id (employee_id),
-            KEY period (period_start, period_end)
-        )";
-        db_query($sql, 'Could not create payroll table');
-    }
-
+    /**
+     * Get the GL code mapping for payroll accounts.
+     *
+     * @return array Associative array of payroll account types to GL codes
+     */
     public function getGLCodeMapping(): array
     {
         return [

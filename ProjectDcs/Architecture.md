@@ -1,338 +1,141 @@
 # Architecture - ksf_FA_HRM
 
-## Overview
+## 1. Overview
 
-This document describes the technical architecture of the ksf_FA_HRM module - a Human Resources Management extension for FrontAccounting.
+ksf_FA_HRM is the FrontAccounting adapter for Human Resources Management. It provides the FA UI layer, database tables, and hooks to integrate HRM with FrontAccounting.
 
----
+## 2. Design Principles
 
-## 1. System Architecture
+- SOLID, DRY, TDD, DI, SRP
+- FA 2.4 module conventions (hooks class, gzip config, db_escape)
+- PSR-4 autoloading under `ksfraser\FrontAccounting\HRM\`
 
-### 1.1 Module Position
-
-The ksf_FA_HRM module sits as an extension layer on top of FrontAccounting:
-
-```
-┌─────────────────────────────────────────┐
-│           FrontAccounting Core          │
-│   (GL, AP, AR, Banking, Reporting)      │
-├─────────────────────────────────────────┤
-│           ksf_FA_HRM Module             │
-│   (Employee, Compensation, Benefits)   │
-├─────────────────────────────────────────┤
-│       ksfraser/ksf-hrm Library         │
-│        (Core HRM Functionality)        │
-├─────────────────────────────────────────┤
-│            MySQL Database               │
-└─────────────────────────────────────────┘
-```
-
-### 1.2 Technology Stack
-
-| Component | Technology |
-|-----------|------------|
-| Platform | FrontAccounting 2.4+ |
-| Language | PHP 8.1+ |
-| Database | MySQL 5.7+ |
-| External Library | ksfraser/ksf-hrm |
-| Integration | DataIO Framework |
-
----
-
-## 2. Module Structure
-
-### 2.1 Directory Layout
-
-```
-ksf_FA_HRM/
-├── includes/
-│   └── import.php              # CSV import integration
-├── src/
-│   ├── Hooks/
-│   │   └── InstallHook.php    # Installation lifecycle
-│   └── GL/
-│       └── PayrollGLentries.php # Payroll GL posting
-├── sql/
-│   └── install.sql            # SQL installation scripts
-├── ProjectDcs/                # Project documentation
-├── install.php               # Module entry point
-├── import.php                # Import configuration
-├── composer.json             # Composer dependencies
-└── README.md                 # Module documentation
-```
-
-### 2.2 Component Responsibilities
-
-#### install.php
-- Module registration with FrontAccounting
-- Defines access levels and permissions
-- Registers install/uninstall hooks
-- Adds extension options widget
-
-#### includes/import.php
-- Implements CSV import menu
-- Provides field mapping UI
-- Processes employee import with upsert logic
-- Integrates with ksf_DataIO framework
-
-#### src/Hooks/InstallHook.php
-- Database table creation/management
-- Menu item registration
-- Default preference configuration
-- Clean uninstallation
-
-#### src/GL/PayrollGLentries.php
-- Journal entry generation
-- GL posting integration
-- GL code mapping management
-
----
-
-## 3. Database Architecture
+## 3. Data Architecture
 
 ### 3.1 Entity Relationship Diagram
 
 ```
-┌──────────────────┐       ┌────────────────────┐
-│ ksf_hrm_employees│       │  ksf_hrm_grades    │
-├──────────────────┤       ├────────────────────┤
-│ id (PK)          │       │ id (PK)            │
-│ employee_number  │       │ code (UNIQUE)      │
-│ first_name       │       │ name               │
-│ last_name        │       │ min_salary         │
-│ email            │       │ max_salary         │
-│ phone            │──────<│ min_hourly         │
-│ department       │       │ max_hourly         │
-│ job_title        │       │ level              │
-│ status           │       └────────┬───────────┘
-│ hire_date        │                │
-│ manager_id (FK)  │                │
-│ team_id (FK)     │       ┌────────▼───────────┐
-└────────┬─────────┘       │ksf_hrm_compensation│
-         │                ├──────────────────────┤
-         │                │ id (PK)              │
-┌────────▼─────────┐       │ employee_id (FK)    │──┐
-│ksf_hrm_compensation│     │ grade_id (FK)       │<─┘
-├──────────────────┤       │ annual_salary       │
-│ id (PK)          │       │ hourly_rate         │
-│ employee_id (FK) │       │ employee_type       │
-│ grade_id (FK)    │       │ ot_eligible         │
-│ annual_salary    │       │ gl_code_salary      │
-│ hourly_rate      │       │ gl_code_overtime    │
-└──────────────────┘       └──────────────────────┘
-
-┌──────────────────┐       ┌────────────────────┐
-│  ksf_hrm_benefits│       │ ksf_hrm_emergency_│
-├──────────────────┤       │     contacts       │
-│ id (PK)          │       ├────────────────────┤
-│ code (UNIQUE)    │       │ id (PK)            │
-│ name             │       │ employee_id (FK)   │
-│ type             │       │ name               │
-│ employer_rate    │       │ relationship       │
-│ employee_rate    │       │ phone              │
-│ gl_code_expense  │       └────────────────────┘
-│ gl_code_liability│       ┌────────────────────┐
-└──────────────────┘       │ksf_hrm_dependents  │
-                           ├────────────────────┤
-                           │ id (PK)            │
-                           │ employee_id (FK)   │
-                           │ first_name         │
-                           │ relationship       │
-                           │ date_of_birth      │
-                           └────────────────────┘
+                    ┌──────────────────────┐
+                    │   0_crm_persons      │  (FA built-in)
+                    │   id, name, email    │
+                    └─────────┬────────────┘
+                              │ person_id FK
+                    ┌─────────▼────────────┐
+                    │ 0_hrm_contacts_      │
+                    │   employment         │
+                    │ employment_id (PK)   │
+                    │ person_id (UNIQUE)   │
+                    │ department_id ───────┤──┐
+                    │ position_id ─────────┤──┤──┐
+                    │ grade_id ────────────┤──┤──┤──┐
+                    │ hire_date            │  │  │  │
+                    │ salary_amount        │  │  │  │
+                    └─────────────────────┘  │  │  │
+                                             │  │  │
+         ┌───────────────────────────────────┘  │  │
+         ▼                                      │  │
+┌────────────────────┐                         │  │
+│ 0_hrm_departments  │◄────────────────────────┘  │
+│ department_id (PK) │                            │
+│ department_name    │                            │
+│ parent_dept_id ────┤── (self-ref)               │
+│ manager_person_id  │                            │
+└─────────┬──────────┘                            │
+          │ department_id                         │
+    ┌─────▼──────────┐                            │
+    │ 0_hrm_teams    │                            │
+    │ team_id (PK)   │                            │
+    │ department_id  │                            │
+    │ parent_team_id │◄── (self-ref)              │
+    │ team_code      │  (used in position code)   │
+    └─────┬──────────┘                            │
+          │ team_id                               │
+    ┌─────▼──────────┐    ┌──────────────────┐   │
+    │ 0_hrm_positions│◄───│ 0_hrm_roles      │   │
+    │ position_id PK │    │ role_id (PK)     │   │
+    │ position_code  │    │ department_id    │   │
+    │ department_id  │    │ role_dict_id ────┼───┘
+    │ team_id ───────┤    │ role_name        │
+    │ role_id ───────┘    └──────────────────┘
+    │                   ▲
+    └───────────────────┘
+          │ position_id FK
+    ┌─────▼──────────────┐
+    │ 0_hrm_grades       │◄──── 0_hrm_work_assignments
+    │ grade_id (PK)      │      (employment_id + position_id
+    │ grade_name         │       + grade_id + salary)
+    │ min_salary         │
+    │ max_salary         │      ┌─────────────────────────┐
+    └────────────────────┘      │ 0_hrm_pay_rate_history  │
+                                │ rate_id (PK)            │
+                                │ employment_id           │
+                                │ old_salary, new_salary  │
+                                │ effective_date          │
+                                └─────────────────────────┘
 ```
 
 ### 3.2 Table Indexing Strategy
 
-| Table | Primary Key | Unique Index | Regular Indexes |
-|-------|-------------|--------------|-----------------|
-| ksf_hrm_employees | id | employee_number | email, status, department |
-| ksf_hrm_grades | id | code | - |
-| ksf_hrm_benefits | id | code | - |
-| ksf_hrm_compensation | id | - | employee_id, grade_id |
-| ksf_hrm_emergency_contacts | id | - | employee_id |
-| ksf_hrm_dependents | id | - | employee_id |
-| ksf_hrm_payroll | id | - | employee_id, period |
+| Table | Primary Key | Unique | Foreign Keys | Indexes |
+|-------|-------------|--------|--------------|---------|
+| `0_hrm_departments` | `department_id` | — | `parent_dept_id` → self, `manager_person_id` → `0_crm_persons.id` | `parent_dept_id` |
+| `0_hrm_teams` | `team_id` | — | `department_id` → `0_hrm_departments`, `parent_team_id` → self | `department_id`, `parent_team_id` |
+| `0_hrm_role_dictionary` | `dict_id` | `role_name` | — | `role_name` |
+| `0_hrm_roles` | `role_id` | — | `department_id` → `0_hrm_departments`, `role_dict_id` → `0_hrm_role_dictionary` | `department_id`, `role_dict_id` |
+| `0_hrm_positions` | `position_id` | `position_code` | `department_id` → `0_hrm_departments`, `team_id` → `0_hrm_teams`, `role_id` → `0_hrm_roles` | `department_id`, `team_id`, `role_id` |
+| `0_hrm_grades` | `grade_id` | `grade_name` | — | `grade_name` |
+| `0_hrm_contacts_employment` | `employment_id` | `person_id` | `person_id` → `0_crm_persons.id`, `department_id` → `0_hrm_departments`, `position_id` → `0_hrm_positions`, `grade_id` → `0_hrm_grades`, `status_id` → `0_ksf_hrm_employment_status` | `person_id`, `department_id`, `position_id`, `grade_id` |
+| `0_ksf_hrm_employment_status` | `status_id` | `status_name` | — | `status_name` |
+| `0_hrm_work_assignments` | `assignment_id` | — | `employment_id` → `0_hrm_contacts_employment`, `position_id` → `0_hrm_positions`, `grade_id` → `0_hrm_grades` | `employment_id`, `position_id`, `grade_id` |
+| `0_hrm_pay_rate_history` | `rate_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id`, `effective_date` |
+| `0_hrm_pay_periods` | `period_id` | — | — | `period_start_date`, `status` |
+| `0_hrm_pay_elements` | `element_id` | `element_name` | — | `element_type` |
+| `0_hrm_salary_structure` | `structure_id` | — | `grade_id` → `0_hrm_grades`, `element_id` → `0_hrm_pay_elements` | `grade_id`, `element_id` |
+| `0_hrm_separation_reasons` | `reason_id` | `reason_name` | — | `reason_name` |
+| `0_ksf_hrm_benefits` | `benefit_id` | `benefit_name` | — | `benefit_name` |
+| `0_ksf_hrm_employee_benefits` | `emp_benefit_id` | — | `employment_id` → `0_hrm_contacts_employment`, `benefit_id` → `0_ksf_hrm_benefits` | `employment_id`, `benefit_id` |
+| `0_ksf_hrm_payroll` | `payroll_id` | — | `period_id` → `0_hrm_pay_periods` | `period_id`, `status` |
+| `0_ksf_hrm_payroll_entries` | `entry_id` | — | `payroll_id` → `0_ksf_hrm_payroll`, `employment_id` → `0_hrm_contacts_employment`, `element_id` → `0_hrm_pay_elements` | `payroll_id`, `employment_id`, `element_id` |
+| `0_hrm_contacts_pii` | `pii_id` | `employment_id` | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
+| `0_hrm_contacts_banking` | `banking_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
+| `0_hrm_dependent_details` | `dependent_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
 
----
+## 4. Module Architecture
 
-## 4. Integration Architecture
+### 4.1 Class Structure
 
-### 4.1 FrontAccounting Integration
-
-#### Hook System
-- `ksf_fa_hrm_install` - Triggered on module installation
-- Extends FA hook system for custom lifecycle events
-
-#### Permission System
-- Uses FA's permission model with custom permission `ksf_hrm`
-- Permission level: FA_PERMISSION_READ
-
-#### Menu System
-- Adds HRM menu item via `add_module_extensions_menu_item()`
+```
+ksfraser\FrontAccounting\HRM\
+├── Hooks\
+│   └── InstallHook.php      # Module lifecycle hooks
+└── GL\
+    └── PayrollGLentries.php  # GL posting for payroll
+```
 
 ### 4.2 GL Integration
 
-```
-Payroll Process Flow:
-┌──────────────┐    ┌──────────────────┐    ┌────────────┐
-│ Compensation ���───>│ PayrollGLentries │───>│   FA_GL   │
-│   Service    │    │ createJournalEntry│    │  Journal  │
-└──────────────┘    └──────────────────┘    └────────────┘
-                           │
-                           v
-                    ┌──────────────────┐
-                    │ksf_hrm_payroll  │
-                    │   (tracking)    │
-                    └──────────────────┘
-```
+Payroll GL entries are posted via `PayrollGLentries` class. GL account codes are configurable per company. Payroll runs use the `0_ksf_hrm_payroll` table to track status (Open → Processing → Closed → Paid).
 
-### 4.3 Import System Integration
+### 4.3 FA Module Integration
+
+- **Menu**: FAModuleMenu sidebar with 10 views
+- **Access Control**: SA_HRM_* security areas
+- **Config**: Gzip-compressed `_init/config`
+- **Hooks**: Class-based `hooks_ksf_FA_HRM` extending FA `hooks`
+
+## 5. Org Hierarchy
 
 ```
-CSV Import Flow:
-┌─────────┐    ┌────────────────┐    ┌────────────────┐
-│ Upload  │───>│ Field Mapping  │───>│ Process/Upsert │
-│  File   │    │   (ksf_DataIO) │    │    to DB       │
-└─────────┘    └────────────────┘    └────────────────┘
+Departments
+  └── Teams (recursive, team_code used in position code)
+        └── Roles (from global dictionary, cloned per dept)
+              └── Positions (DEPT-TEAM-###, e.g., IT-SUP-001)
 ```
 
----
+Positions use auto-generated codes: `{DEPT_CODE}-{TEAM_CODE}-{SEQ}`.
 
-## 5. Design Patterns
+## 6. Dependencies
 
-### 5.1 Service Layer Pattern
-
-```
-PayrollGLentries.php
-├── uses CompensationService from ksf-hrm library
-├── creates JournalEntry objects
-└── delegates GL posting to FA write_journal()
-```
-
-### 5.2 Hook Pattern
-
-```
-InstallHook.php
-├── install() - main entry point
-├── createTables() - database setup
-├── createMenuItems() - navigation
-└── setDefaultPreferences() - configuration
-```
-
-### 5.3 Factory Pattern
-
-```
-import.php
-├── returns configuration array
-└── processor function handles instantiation
-```
-
----
-
-## 6. Configuration Management
-
-### 6.1 Company Preferences
-
-Stored in FA's company preferences table:
-
-```php
-$defaults = [
-    'ksf_salary_expense_gl' => 'G01',  // Default salary GL
-    'ksf_ot_expense_gl' => 'O01',       // Default overtime GL
-    'ksf_year_hours' => '2080',         // Annual work hours
-    'ksf_week_hours' => '40',           // Weekly hours
-    'ksf_ot_enabled' => '1',           // Overtime enabled
-];
-```
-
-### 6.2 GL Code Mapping
-
-Flexible mapping stored per company:
-- Salary Expense: G01
-- Overtime Expense: O01
-- EI/CPP/Pension/Health: Various 2xxx accounts
-
----
-
-## 7. Error Handling
-
-### 7.1 Database Errors
-- Table creation failures: Logged with specific table name
-- Query failures: Returned to caller with error message
-
-### 7.2 Import Errors
-- Missing required fields: Skip row, continue processing
-- Upsert failures: Log emp_no, continue
-
-### 7.3 GL Posting Errors
-- Journal entry failures: Return boolean, log details
-
----
-
-## 8. Security Considerations
-
-### 8.1 Input Validation
-- All database queries use `db_escape()` for SQL injection prevention
-- Field mapping validates target field names
-
-### 8.2 Access Control
-- Menu access controlled by FA permission system
-- Company-level data isolation via FA's company filter
-
-### 8.3 Data Privacy
-- Employee data includes PII (SIN, bank details) - should be protected
-- Salary data restricted by permission levels
-
----
-
-## 9. Extension Points
-
-### 9.1 Custom Benefits
-- New benefit types can be added to ksf_hrm_benefits
-- GL codes configurable per benefit
-
-### 9.2 Custom Fields
-- Employee table can be extended via separate metadata table
-- Import can be extended for additional fields
-
-### 9.3 Payroll Processing
-- PayrollGLentries class can be extended for custom journal entry formats
-- GL code mapping is extensible
-
----
-
-## 10. Dependencies
-
-### 10.1 External Packages
-
-```json
-{
-    "require": {
-        "php": ">=8.1",
-        "ksfraser/ksf-hrm": "^1.0"
-    }
-}
-```
-
-### 10.2 Required Features
-
-- FrontAccounting 2.4+ hook system
-- MySQL 5.7+ with InnoDB
-- PHP 8.1+ with PDO
-
----
-
-## 11. Performance Considerations
-
-### 11.1 Database Optimization
-- Indexed columns for common queries (employee_id, status, department)
-- Limited denormalization for performance
-
-### 11.2 Import Performance
-- Batch processing of rows
-- Pre-check for existence before insert/update
-
-### 11.3 Caching
-- GL code mapping cached in memory during session
-- Company preferences cached per page load
+- FrontAccounting 2.4+ (core)
+- ksf_FA_CRM (contact system - 0_crm_persons)
+- PHP >=7.3

@@ -80,11 +80,11 @@ function write_payroll_entry($entry_id, $data) {
 }
 
 function get_payroll_entries($payroll_id) {
-    $sql = "SELECT pe.*, e.element_name, e.element_code, e.is_deduction
+    $sql = "SELECT pe.*, e.element_name, e.element_code, e.category
         FROM `" . TB_PREF . "ksf_hrm_payroll_entries` pe
-        LEFT JOIN `" . TB_PREF . "fa_pay_elements` e ON pe.element_id = e.element_id
+        LEFT JOIN `" . TB_PREF . "hrm_pay_elements` e ON pe.element_id = e.element_id
         WHERE pe.`payroll_id` = " . db_escape($payroll_id) . "
-        ORDER BY e.display_order";
+        ORDER BY e.element_code";
     return db_query($sql, "Failed to get payroll entries");
 }
 ?>
