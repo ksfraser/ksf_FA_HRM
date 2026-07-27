@@ -1,8 +1,8 @@
--- fa_contacts_employment table
+-- hrm_contacts_employment table
 -- Employment details (links person to department, position, grade)
 -- HRM owns this table
 
-CREATE TABLE IF NOT EXISTS `fa_contacts_employment` (
+CREATE TABLE IF NOT EXISTS `hrm_contacts_employment` (
     `employment_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id (type=Employee)',
     `employee_code` VARCHAR(20) DEFAULT NULL COMMENT 'e.g., EMP001',

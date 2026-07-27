@@ -1,8 +1,8 @@
--- fa_grades table
+-- hrm_grades table
 -- Salary grades with hierarchy
 -- HRM owns this table
 
-CREATE TABLE IF NOT EXISTS `fa_grades` (
+CREATE TABLE IF NOT EXISTS `hrm_grades` (
     `grade_id` INT(11) NOT NULL AUTO_INCREMENT,
     `grade_name` VARCHAR(50) NOT NULL,
     `position_id` INT(11) DEFAULT NULL COMMENT 'Which position this grade belongs to',

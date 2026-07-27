@@ -19,11 +19,11 @@ function get_employees()
     $sql = "SELECT e.*, d.department_name, d.department_code,
                    p.position_code, r.role_name, tm.team_name,
                    CONCAT(COALESCE(cp.firstname, ''), ' ', COALESCE(cp.lastname, '')) AS person_name
-            FROM " . TB_PREF . "fa_contacts_employment e
-            LEFT JOIN " . TB_PREF . "fa_departments d ON e.department_id = d.department_id
-            LEFT JOIN " . TB_PREF . "fa_positions p ON e.position_id = p.position_id
-            LEFT JOIN " . TB_PREF . "fa_roles r ON p.role_id = r.role_id
-            LEFT JOIN " . TB_PREF . "fa_teams tm ON p.team_id = tm.team_id
+            FROM " . TB_PREF . "hrm_contacts_employment e
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON e.department_id = d.department_id
+            LEFT JOIN " . TB_PREF . "hrm_positions p ON e.position_id = p.position_id
+            LEFT JOIN " . TB_PREF . "hrm_roles r ON p.role_id = r.role_id
+            LEFT JOIN " . TB_PREF . "hrm_teams tm ON p.team_id = tm.team_id
             LEFT JOIN " . TB_PREF . "crm_persons cp ON e.person_id = cp.id
             ORDER BY e.employee_code ASC";
 
@@ -35,11 +35,11 @@ function get_employee($employmentId)
     $sql = "SELECT e.*, d.department_name, d.department_code,
                    p.position_code, r.role_name, tm.team_name,
                    CONCAT(COALESCE(cp.firstname, ''), ' ', COALESCE(cp.lastname, '')) AS person_name
-            FROM " . TB_PREF . "fa_contacts_employment e
-            LEFT JOIN " . TB_PREF . "fa_departments d ON e.department_id = d.department_id
-            LEFT JOIN " . TB_PREF . "fa_positions p ON e.position_id = p.position_id
-            LEFT JOIN " . TB_PREF . "fa_roles r ON p.role_id = r.role_id
-            LEFT JOIN " . TB_PREF . "fa_teams tm ON p.team_id = tm.team_id
+            FROM " . TB_PREF . "hrm_contacts_employment e
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON e.department_id = d.department_id
+            LEFT JOIN " . TB_PREF . "hrm_positions p ON e.position_id = p.position_id
+            LEFT JOIN " . TB_PREF . "hrm_roles r ON p.role_id = r.role_id
+            LEFT JOIN " . TB_PREF . "hrm_teams tm ON p.team_id = tm.team_id
             LEFT JOIN " . TB_PREF . "crm_persons cp ON e.person_id = cp.id
             WHERE e.employment_id = " . (int)$employmentId;
 
@@ -56,7 +56,7 @@ function get_employee($employmentId)
 
 function insert_employee($data)
 {
-    $sql = "INSERT INTO " . TB_PREF . "fa_contacts_employment
+    $sql = "INSERT INTO " . TB_PREF . "hrm_contacts_employment
             (person_id, employee_code, department_id, position_id, grade_id,
              reports_to_person_id, hire_date, probation_end_date, is_active)
             VALUES (" .
@@ -75,7 +75,7 @@ function insert_employee($data)
 
 function update_employee($data)
 {
-    $sql = "UPDATE " . TB_PREF . "fa_contacts_employment SET
+    $sql = "UPDATE " . TB_PREF . "hrm_contacts_employment SET
             person_id = " . (int)$data['person_id'] . ",
             employee_code = " . db_escape($data['employee_code']) . ",
             department_id = " . (int)($data['department_id'] ?? 0) . ",
@@ -95,7 +95,7 @@ function update_employee($data)
 
 function insert_department($data)
 {
-    $sql = "INSERT INTO " . TB_PREF . "fa_departments
+    $sql = "INSERT INTO " . TB_PREF . "hrm_departments
             (department_code, department_name, description, is_active)
             VALUES (" .
         db_escape($data['department_code']) . ", " .
@@ -112,7 +112,7 @@ function insert_department($data)
 
 function get_role_dictionary()
 {
-    $sql = "SELECT * FROM " . TB_PREF . "fa_role_dictionary ORDER BY role_name";
+    $sql = "SELECT * FROM " . TB_PREF . "hrm_role_dictionary ORDER BY role_name";
     return db_query($sql);
 }
 
@@ -123,8 +123,8 @@ function get_role_dictionary()
 function get_roles_for_department($departmentId)
 {
     $sql = "SELECT r.*, rd.role_name AS dict_name
-            FROM " . TB_PREF . "fa_roles r
-            LEFT JOIN " . TB_PREF . "fa_role_dictionary rd ON r.role_dict_id = rd.role_dict_id
+            FROM " . TB_PREF . "hrm_roles r
+            LEFT JOIN " . TB_PREF . "hrm_role_dictionary rd ON r.role_dict_id = rd.role_dict_id
             WHERE r.department_id = " . (int)$departmentId . "
             ORDER BY r.role_name";
     return db_query($sql);
@@ -132,7 +132,7 @@ function get_roles_for_department($departmentId)
 
 function insert_role($data)
 {
-    $sql = "INSERT INTO " . TB_PREF . "fa_roles
+    $sql = "INSERT INTO " . TB_PREF . "hrm_roles
             (department_id, role_dict_id, role_name, description, is_active)
             VALUES (" .
         (int)$data['department_id'] . ", " .
@@ -152,8 +152,8 @@ function get_teams_for_department($departmentId)
 {
     $sql = "SELECT t.*,
                    COALESCE(parent.team_name, '') AS parent_team_name
-            FROM " . TB_PREF . "fa_teams t
-            LEFT JOIN " . TB_PREF . "fa_teams parent ON t.parent_team_id = parent.team_id
+            FROM " . TB_PREF . "hrm_teams t
+            LEFT JOIN " . TB_PREF . "hrm_teams parent ON t.parent_team_id = parent.team_id
             WHERE t.department_id = " . (int)$departmentId . "
             ORDER BY parent.team_name, t.team_name";
     return db_query($sql);
@@ -163,9 +163,9 @@ function get_all_teams()
 {
     $sql = "SELECT t.*, d.department_code, d.department_name,
                    COALESCE(parent.team_name, '') AS parent_team_name
-            FROM " . TB_PREF . "fa_teams t
-            LEFT JOIN " . TB_PREF . "fa_departments d ON t.department_id = d.department_id
-            LEFT JOIN " . TB_PREF . "fa_teams parent ON t.parent_team_id = parent.team_id
+            FROM " . TB_PREF . "hrm_teams t
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON t.department_id = d.department_id
+            LEFT JOIN " . TB_PREF . "hrm_teams parent ON t.parent_team_id = parent.team_id
             ORDER BY d.department_code, parent.team_name, t.team_name";
     return db_query($sql);
 }
@@ -173,7 +173,7 @@ function get_all_teams()
 function insert_team($data)
 {
     $parent = (int)($data['parent_team_id'] ?? 0);
-    $sql = "INSERT INTO " . TB_PREF . "fa_teams
+    $sql = "INSERT INTO " . TB_PREF . "hrm_teams
             (department_id, parent_team_id, team_code, team_name, description, is_active)
             VALUES (" .
         (int)$data['department_id'] . ", " .
@@ -188,7 +188,7 @@ function insert_team($data)
 
 function get_team($teamId)
 {
-    $sql = "SELECT * FROM " . TB_PREF . "fa_teams WHERE team_id = " . (int)$teamId;
+    $sql = "SELECT * FROM " . TB_PREF . "hrm_teams WHERE team_id = " . (int)$teamId;
     $result = db_query($sql);
     if ($result && db_num_rows($result)) {
         return db_fetch_assoc($result);
@@ -199,7 +199,7 @@ function get_team($teamId)
 function update_team($data)
 {
     $parent = (int)($data['parent_team_id'] ?? 0);
-    $sql = "UPDATE " . TB_PREF . "fa_teams SET
+    $sql = "UPDATE " . TB_PREF . "hrm_teams SET
             parent_team_id = " . ($parent > 0 ? $parent : 'NULL') . ",
             team_code = " . db_escape($data['team_code']) . ",
             team_name = " . db_escape($data['team_name']) . ",
@@ -216,17 +216,17 @@ function update_team($data)
 function generate_position_code($departmentId, $teamId)
 {
     $dept = db_fetch_assoc(db_query(
-        "SELECT department_code FROM " . TB_PREF . "fa_departments WHERE department_id = " . (int)$departmentId
+        "SELECT department_code FROM " . TB_PREF . "hrm_departments WHERE department_id = " . (int)$departmentId
     ));
     $team = db_fetch_assoc(db_query(
-        "SELECT team_code FROM " . TB_PREF . "fa_teams WHERE team_id = " . (int)$teamId
+        "SELECT team_code FROM " . TB_PREF . "hrm_teams WHERE team_id = " . (int)$teamId
     ));
 
     $deptCode = $dept ? strtoupper(substr($dept['department_code'], 0, 3)) : 'UNK';
     $teamCode = $team ? strtoupper(substr($team['team_code'], 0, 3)) : 'GEN';
 
     $sql = "SELECT MAX(position_number) AS max_num
-            FROM " . TB_PREF . "fa_positions
+            FROM " . TB_PREF . "hrm_positions
             WHERE department_id = " . (int)$departmentId . "
             AND team_id = " . (int)$teamId;
     $result = db_fetch_assoc(db_query($sql));
@@ -244,7 +244,7 @@ function insert_position($data)
 
     $code = generate_position_code($data['department_id'], $teamId);
 
-    $sql = "INSERT INTO " . TB_PREF . "fa_positions
+    $sql = "INSERT INTO " . TB_PREF . "hrm_positions
             (position_code, department_id, team_id, role_id, position_number, description, is_active)
             VALUES (" .
         db_escape($code) . ", " .
@@ -261,10 +261,10 @@ function insert_position($data)
 function get_position($positionId)
 {
     $sql = "SELECT p.*, d.department_code, t.team_code, r.role_name
-            FROM " . TB_PREF . "fa_positions p
-            LEFT JOIN " . TB_PREF . "fa_departments d ON p.department_id = d.department_id
-            LEFT JOIN " . TB_PREF . "fa_teams t ON p.team_id = t.team_id
-            LEFT JOIN " . TB_PREF . "fa_roles r ON p.role_id = r.role_id
+            FROM " . TB_PREF . "hrm_positions p
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON p.department_id = d.department_id
+            LEFT JOIN " . TB_PREF . "hrm_teams t ON p.team_id = t.team_id
+            LEFT JOIN " . TB_PREF . "hrm_roles r ON p.role_id = r.role_id
             WHERE p.position_id = " . (int)$positionId;
     $result = db_query($sql);
     if ($result && db_num_rows($result)) {
@@ -276,9 +276,9 @@ function get_position($positionId)
 function get_positions_for_department($departmentId)
 {
     $sql = "SELECT p.*, t.team_code, t.team_name, r.role_name
-            FROM " . TB_PREF . "fa_positions p
-            LEFT JOIN " . TB_PREF . "fa_teams t ON p.team_id = t.team_id
-            LEFT JOIN " . TB_PREF . "fa_roles r ON p.role_id = r.role_id
+            FROM " . TB_PREF . "hrm_positions p
+            LEFT JOIN " . TB_PREF . "hrm_teams t ON p.team_id = t.team_id
+            LEFT JOIN " . TB_PREF . "hrm_roles r ON p.role_id = r.role_id
             WHERE p.department_id = " . (int)$departmentId . "
             ORDER BY p.position_code";
     return db_query($sql);
@@ -287,7 +287,7 @@ function get_positions_for_department($departmentId)
 function update_position($data)
 {
     $teamId = (int)($data['team_id'] ?? 0);
-    $sql = "UPDATE " . TB_PREF . "fa_positions SET
+    $sql = "UPDATE " . TB_PREF . "hrm_positions SET
             department_id = " . (int)$data['department_id'] . ",
             team_id = " . ($teamId > 0 ? $teamId : 'NULL') . ",
             role_id = " . (int)$data['role_id'] . ",
@@ -303,7 +303,7 @@ function update_position($data)
 
 function insert_grade($data)
 {
-    $sql = "INSERT INTO " . TB_PREF . "fa_grades
+    $sql = "INSERT INTO " . TB_PREF . "hrm_grades
             (grade_code, grade_name, min_salary, max_salary, description, is_active)
             VALUES (" .
         db_escape($data['grade_code']) . ", " .
@@ -317,7 +317,7 @@ function insert_grade($data)
 
 function get_grade($gradeId)
 {
-    $sql = "SELECT * FROM " . TB_PREF . "fa_grades WHERE grade_id = " . (int)$gradeId;
+    $sql = "SELECT * FROM " . TB_PREF . "hrm_grades WHERE grade_id = " . (int)$gradeId;
     $result = db_query($sql);
     if ($result && db_num_rows($result)) {
         return db_fetch_assoc($result);
@@ -327,7 +327,7 @@ function get_grade($gradeId)
 
 function update_grade($data)
 {
-    $sql = "UPDATE " . TB_PREF . "fa_grades SET
+    $sql = "UPDATE " . TB_PREF . "hrm_grades SET
             grade_code = " . db_escape($data['grade_code']) . ",
             grade_name = " . db_escape($data['grade_name']) . ",
             min_salary = " . (float)($data['min_salary'] ?? 0) . ",
@@ -394,17 +394,17 @@ function get_employment_statuses()
 
 function get_departments()
 {
-    $sql = "SELECT * FROM " . TB_PREF . "fa_departments WHERE is_active = 1 ORDER BY department_name";
+    $sql = "SELECT * FROM " . TB_PREF . "hrm_departments WHERE is_active = 1 ORDER BY department_name";
     return db_query($sql);
 }
 
 function get_positions_list()
 {
     $sql = "SELECT p.*, d.department_code, t.team_code, r.role_name
-            FROM " . TB_PREF . "fa_positions p
-            LEFT JOIN " . TB_PREF . "fa_departments d ON p.department_id = d.department_id
-            LEFT JOIN " . TB_PREF . "fa_teams t ON p.team_id = t.team_id
-            LEFT JOIN " . TB_PREF . "fa_roles r ON p.role_id = r.role_id
+            FROM " . TB_PREF . "hrm_positions p
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON p.department_id = d.department_id
+            LEFT JOIN " . TB_PREF . "hrm_teams t ON p.team_id = t.team_id
+            LEFT JOIN " . TB_PREF . "hrm_roles r ON p.role_id = r.role_id
             WHERE p.is_active = 1
             ORDER BY p.position_code";
     return db_query($sql);
@@ -412,6 +412,6 @@ function get_positions_list()
 
 function get_grades_list()
 {
-    $sql = "SELECT * FROM " . TB_PREF . "fa_grades WHERE is_active = 1 ORDER BY grade_name";
+    $sql = "SELECT * FROM " . TB_PREF . "hrm_grades WHERE is_active = 1 ORDER BY grade_name";
     return db_query($sql);
 }

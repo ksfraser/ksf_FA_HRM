@@ -35,7 +35,7 @@ $show_add_form = isset($_GET['add']);
 $show_team_form = isset($_GET['add_team']);
 $show_role_form = isset($_GET['add_role']);
 
-$dept_list = db_query("SELECT * FROM " . TB_PREF . "fa_departments ORDER BY department_code");
+$dept_list = db_query("SELECT * FROM " . TB_PREF . "hrm_departments ORDER BY department_code");
 $role_dict = get_role_dictionary();
 
 $teams = null;
@@ -164,7 +164,7 @@ function render_team_tree($teams, $parentId, $deptId, $depth = 0)
 
 <?php if ($selected_dept > 0): ?>
 <?php
-$dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "fa_departments WHERE department_id = " . $selected_dept));
+$dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WHERE department_id = " . $selected_dept));
 ?>
 
 <div class="row">

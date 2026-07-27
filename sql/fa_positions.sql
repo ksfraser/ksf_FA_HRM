@@ -1,8 +1,8 @@
--- fa_positions table
+-- hrm_positions table
 -- Job positions (shared by HRM + Recruitment + CRM)
 -- HRM owns this table
 
-CREATE TABLE IF NOT EXISTS `fa_positions` (
+CREATE TABLE IF NOT EXISTS `hrm_positions` (
     `position_id` INT(11) NOT NULL AUTO_INCREMENT,
     `position_name` VARCHAR(100) NOT NULL,
     `position_code` VARCHAR(20) DEFAULT NULL,

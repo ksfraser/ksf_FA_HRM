@@ -5,7 +5,7 @@
 -- ============================================================================
 
 -- Departments
-CREATE TABLE IF NOT EXISTS `0_fa_departments` (
+CREATE TABLE IF NOT EXISTS `0_hrm_departments` (
     `department_id` INT(11) NOT NULL AUTO_INCREMENT,
     `department_code` VARCHAR(20) DEFAULT NULL,
     `department_name` VARCHAR(100) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_departments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Role Dictionary (global master list of role types)
-CREATE TABLE IF NOT EXISTS `0_fa_role_dictionary` (
+CREATE TABLE IF NOT EXISTS `0_hrm_role_dictionary` (
     `role_dict_id` INT(11) NOT NULL AUTO_INCREMENT,
     `role_name` VARCHAR(100) NOT NULL,
     `description` TEXT,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_role_dictionary` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Department Roles (cloned from dictionary into each department)
-CREATE TABLE IF NOT EXISTS `0_fa_roles` (
+CREATE TABLE IF NOT EXISTS `0_hrm_roles` (
     `role_id` INT(11) NOT NULL AUTO_INCREMENT,
     `department_id` INT(11) NOT NULL,
     `role_dict_id` INT(11) DEFAULT NULL COMMENT 'Source from dictionary',
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Teams (recursive, within a department)
-CREATE TABLE IF NOT EXISTS `0_fa_teams` (
+CREATE TABLE IF NOT EXISTS `0_hrm_teams` (
     `team_id` INT(11) NOT NULL AUTO_INCREMENT,
     `department_id` INT(11) NOT NULL,
     `parent_team_id` INT(11) DEFAULT NULL COMMENT 'Self-referential for sub-teams',
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_teams` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Positions (role filled within a team; code = DEPT-TEAM-###)
-CREATE TABLE IF NOT EXISTS `0_fa_positions` (
+CREATE TABLE IF NOT EXISTS `0_hrm_positions` (
     `position_id` INT(11) NOT NULL AUTO_INCREMENT,
     `position_code` VARCHAR(50) NOT NULL COMMENT 'Generated: DEPT-TEAM-###',
     `department_id` INT(11) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_positions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Grades
-CREATE TABLE IF NOT EXISTS `0_fa_grades` (
+CREATE TABLE IF NOT EXISTS `0_hrm_grades` (
     `grade_id` INT(11) NOT NULL AUTO_INCREMENT,
     `grade_code` VARCHAR(20) DEFAULT NULL,
     `grade_name` VARCHAR(100) NOT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `0_fa_separation_reasons` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Employment Details (links person to department, position, grade)
-CREATE TABLE IF NOT EXISTS `0_fa_contacts_employment` (
+CREATE TABLE IF NOT EXISTS `0_hrm_contacts_employment` (
     `employment_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id',
     `employee_code` VARCHAR(20) DEFAULT NULL COMMENT 'e.g., EMP001',
@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Role Dictionary seed data
-INSERT IGNORE INTO `0_fa_role_dictionary` (role_dict_id, role_name, description) VALUES
+INSERT IGNORE INTO `0_hrm_role_dictionary` (role_dict_id, role_name, description) VALUES
 (1, 'Manager', 'Team or department manager'),
 (2, 'Assistant Manager', 'Deputy to the manager'),
 (3, 'Team Lead', 'Leads a small team'),

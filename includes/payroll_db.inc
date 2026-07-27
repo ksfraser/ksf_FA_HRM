@@ -32,7 +32,7 @@ function get_payroll($payroll_id) {
     $sql = "SELECT p.*, per.name as employee_name, ce.employee_code
         FROM `" . TB_PREF . "ksf_hrm_payroll` p
         LEFT JOIN `" . TB_PREF . "crm_persons` per ON p.person_id = per.id
-        LEFT JOIN `" . TB_PREF . "fa_contacts_employment` ce ON p.person_id = ce.person_id
+        LEFT JOIN `" . TB_PREF . "hrm_contacts_employment` ce ON p.person_id = ce.person_id
         WHERE p.`payroll_id` = " . db_escape($payroll_id);
     $result = db_query($sql, "Failed to get payroll");
     return db_fetch($result);

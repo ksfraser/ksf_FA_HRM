@@ -109,7 +109,7 @@ if ($edit_mode) {
             <?php
             $result = db_query(
                 "SELECT grade_id, grade_code, grade_name, min_salary, max_salary, description, is_active
-                FROM " . TB_PREF . "fa_grades
+                FROM " . TB_PREF . "hrm_grades
                 ORDER BY grade_name",
                 _("Could not query grades")
             );

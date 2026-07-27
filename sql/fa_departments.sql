@@ -1,8 +1,8 @@
--- fa_departments table
+-- hrm_departments table
 -- Enhanced departments with manager linkage
 -- (HRM owns department/position/grade, not CRM)
 
-CREATE TABLE IF NOT EXISTS `fa_departments` (
+CREATE TABLE IF NOT EXISTS `hrm_departments` (
     `department_id` INT(11) NOT NULL AUTO_INCREMENT,
     `department_code` VARCHAR(20) DEFAULT NULL,
     `department_name` VARCHAR(100) NOT NULL,
