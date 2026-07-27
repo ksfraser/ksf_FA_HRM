@@ -95,6 +95,7 @@ class hrm_app extends application
              ->addItem('payroll',      _("Payroll"),          MENU_ENTRY)
              ->addItem('benefits',     _("Benefits"),         MENU_ENTRY)
              ->addItem('leave',        _("Leave Management"), MENU_ENTRY)
+             ->addItem('leave_types',  _("Leave Types"),      MENU_SETTINGS)
              ->addItem('recruitment',  _("Recruitment"),      MENU_ENTRY)
              ->addItem('reports',      _("Reports"),          MENU_REPORT);
 

@@ -1,39 +1,165 @@
 <?php
-$path_to_root = "../..";
+$page_security = 'SA_HRM_BENEFITS';
+$path_to_root = "../../..";
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
 
-$sql = "SELECT * FROM " . TB_PREF . "ksf_hrm_benefits ORDER BY name ASC";
-$result = db_query($sql);
-?>
-<div class="card">
-<div class="card-header"><?php echo _("Benefits"); ?></div>
-<div class="card-body">
-<table class="table table-sm table-striped">
-<thead class="thead-dark">
-<tr>
-    <th><?php echo _("Code"); ?></th>
-    <th><?php echo _("Name"); ?></th>
-    <th><?php echo _("Type"); ?></th>
-    <th><?php echo _("Employer Contrib"); ?></th>
-    <th><?php echo _("Employee Contrib"); ?></th>
-    <th><?php echo _("Status"); ?></th>
-</tr>
-</thead>
-<tbody>
-<?php
-if ($result && db_num_rows($result)) {
-    while ($row = db_fetch_assoc($result)) {
-        echo "<tr>";
-        echo "<td>" . htmlspecialchars($row['benefit_code'] ?? $row['code'] ?? '') . "</td>";
-        echo "<td>" . htmlspecialchars($row['name'] ?? '') . "</td>";
-        echo "<td>" . htmlspecialchars($row['type'] ?? '') . "</td>";
-        echo "<td>" . htmlspecialchars($row['employer_contribution'] ?? '') . "</td>";
-        echo "<td>" . htmlspecialchars($row['employee_contribution'] ?? '') . "</td>";
-        echo "<td>" . htmlspecialchars($row['is_active'] ?? $row['status'] ?? '') . "</td>";
-        echo "</tr>";
+include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+
+$selected_id = isset($_POST['selected_id']) ? $_POST['selected_id'] : (isset($_GET['selected_id']) ? $_GET['selected_id'] : '');
+$View = isset($_GET['view']) ? $_GET['view'] : (isset($_POST['view']) ? $_POST['view'] : '');
+
+// Handle form submission
+if (isset($_POST['save_benefit'])) {
+    $result = insert_benefit($_POST);
+    if ($result) {
+        display_notification(_("Benefit saved successfully."));
+    } else {
+        display_error(_("Could not save benefit."));
     }
+    echo '<meta http-equiv="refresh" content="0;url=' . $path_to_root . '/modules/ksf_FA_HRM/pages/benefits.php?view=benefits">';
+    exit;
+}
+
+$addNew = false;
+if (isset($_GET['addNew'])) {
+    $addNew = true;
+}
+
+include_once($path_to_root . "/includes/page_header.inc");
+?>
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><?php echo _("Benefits Management"); ?></h5>
+        <a href="benefits.php?view=benefits&addNew=1" class="btn btn-primary btn-sm">
+            <i class="fa fa-plus"></i> <?php echo _("Add New Benefit"); ?>
+        </a>
+    </div>
+    <div class="card-body">
+
+<?php if ($addNew) { ?>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><?php echo _("Add New Benefit"); ?></h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="benefits.php?view=benefits">
+                    <input type="hidden" name="save_benefit" value="1" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="benefit_code"><?php echo _("Benefit Code"); ?></label>
+                                <input type="text" class="form-control" id="benefit_code" name="benefit_code" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="benefit_name"><?php echo _("Benefit Name"); ?></label>
+                                <input type="text" class="form-control" id="benefit_name" name="benefit_name" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="benefit_type"><?php echo _("Benefit Type"); ?></label>
+                                <select class="form-control" id="benefit_type" name="benefit_type" required>
+                                    <option value=""><?php echo _("Select Type"); ?></option>
+                                    <option value="Medical"><?php echo _("Medical"); ?></option>
+                                    <option value="Dental"><?php echo _("Dental"); ?></option>
+                                    <option value="Vision"><?php echo _("Vision"); ?></option>
+                                    <option value="Life Insurance"><?php echo _("Life Insurance"); ?></option>
+                                    <option value="Pension"><?php echo _("Pension"); ?></option>
+                                    <option value="Other"><?php echo _("Other"); ?></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="employer_contribution"><?php echo _("Employer Contribution"); ?></label>
+                                <input type="number" class="form-control" id="employer_contribution" name="employer_contribution" step="0.01" min="0" required />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="employee_contribution"><?php echo _("Employee Contribution"); ?></label>
+                                <input type="number" class="form-control" id="employee_contribution" name="employee_contribution" step="0.01" min="0" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="gl_account_code"><?php echo _("GL Account Code"); ?></label>
+                                <input type="text" class="form-control" id="gl_account_code" name="gl_account_code" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="is_active">&nbsp;</label>
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" checked />
+                                    <label class="form-check-label" for="is_active"><?php echo _("Active"); ?></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary"><?php echo _("Save Benefit"); ?></button>
+                        <a href="benefits.php?view=benefits" class="btn btn-secondary"><?php echo _("Cancel"); ?></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+<?php } ?>
+
+<?php
+// List benefits
+$SQL = "SELECT * FROM `" . TB_PREF . "ksf_hrm_benefits` ORDER BY benefit_code";
+$result = db_query($SQL, _("Could not retrieve benefits list."));
+
+if (db_num_rows($result) == 0) {
+    display_notification(_("No benefits found."));
 } else {
-    echo "<tr><td colspan='6' class='text-muted'>" . _("No records found.") . "</td></tr>";
+?>
+        <table class="table table-sm table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th><?php echo _("Benefit Code"); ?></th>
+                    <th><?php echo _("Benefit Name"); ?></th>
+                    <th><?php echo _("Benefit Type"); ?></th>
+                    <th><?php echo _("Employer Contribution"); ?></th>
+                    <th><?php echo _("Employee Contribution"); ?></th>
+                    <th><?php echo _("Status"); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+<?php
+    while ($row = db_fetch($result)) {
+        $badgeClass = $row['is_active'] ? 'badge badge-success' : 'badge badge-secondary';
+        $statusText = $row['is_active'] ? _('Active') : _('Inactive');
+?>
+                <tr>
+                    <td><?php echo display_heading($row['benefit_code']); ?></td>
+                    <td><?php echo $row['benefit_name']; ?></td>
+                    <td><?php echo $row['benefit_type']; ?></td>
+                    <td><?php echo price_format($row['employer_contribution']); ?></td>
+                    <td><?php echo price_format($row['employee_contribution']); ?></td>
+                    <td><span class="<?php echo $badgeClass; ?>"><?php echo $statusText; ?></span></td>
+                </tr>
+<?php
+    }
+?>
+            </tbody>
+        </table>
+<?php
 }
 ?>
-</tbody></table>
-</div></div>
+    </div>
+</div>
+
+<?php
+include_once($path_to_root . "/includes/page_footer.inc");
+?>

@@ -24,8 +24,9 @@ $validViews = array(
     'payroll'     => array('file' => 'pages/payroll.php',     'security' => 'SA_HRM_PAYROLL'),
     'benefits'    => array('file' => 'pages/benefits.php',    'security' => 'SA_HRM_BENEFITS'),
     'leave'       => array('file' => 'pages/leave.php',       'security' => 'SA_HRM_LEAVE'),
-    'recruitment' => array('file' => 'pages/recruitment.php', 'security' => 'SA_HRM_RECRUITMENT'),
-    'reports'     => array('file' => 'pages/reports.php',     'security' => 'SA_ksf_FA_HRMVIEW'),
+    'recruitment'  => array('file' => 'pages/recruitment.php',  'security' => 'SA_HRM_RECRUITMENT'),
+    'leave_types'  => array('file' => 'pages/leave_types.php',  'security' => 'SA_HRM_LEAVE'),
+    'reports'      => array('file' => 'pages/reports.php',      'security' => 'SA_ksf_FA_HRMVIEW'),
 );
 
 if (!isset($validViews[$view])) {
@@ -49,6 +50,7 @@ $menu->addItem('employees',    _("&Employees"),       null)
      ->addItem('payroll',      _("Payroll"),          null)
      ->addItem('benefits',     _("Benefits"),         null)
      ->addItem('leave',        _("Leave Management"), null)
+     ->addItem('leave_types',  _("Leave Types"),      null)
      ->addItem('recruitment',  _("Recruitment"),      null)
      ->addItem('reports',      _("Reports"),          null);
 

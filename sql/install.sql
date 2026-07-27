@@ -234,3 +234,26 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_balances` (
     PRIMARY KEY (`balance_id`),
     UNIQUE KEY `idx_person_type_year` (`person_id`, `leave_type`, `year`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Employment Status Lookup
+CREATE TABLE IF NOT EXISTS `0_ksf_hrm_employment_status` (
+    `status_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `status_code` VARCHAR(20) NOT NULL,
+    `status_name` VARCHAR(100) NOT NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    PRIMARY KEY (`status_id`),
+    UNIQUE KEY `idx_code` (`status_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Leave Types Lookup
+CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_types` (
+    `leave_type_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `type_code` VARCHAR(20) NOT NULL,
+    `type_name` VARCHAR(100) NOT NULL,
+    `default_days` DECIMAL(5,1) DEFAULT 0 COMMENT 'Default annual allocation',
+    `is_paid` TINYINT(1) DEFAULT 1,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`leave_type_id`),
+    UNIQUE KEY `idx_code` (`type_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
