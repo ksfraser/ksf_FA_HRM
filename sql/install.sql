@@ -96,6 +96,64 @@ CREATE TABLE IF NOT EXISTS `0_hrm_grades` (
     PRIMARY KEY (`grade_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Employee work assignment (links employment to position + salary details)
+CREATE TABLE IF NOT EXISTS `0_hrm_work_assignments` (
+    `assignment_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `employment_id` INT(11) NOT NULL COMMENT 'FK to 0_hrm_contacts_employment',
+    `position_id` INT(11) NOT NULL,
+    `grade_id` INT(11) DEFAULT NULL,
+    `salary_amount` DECIMAL(15,2) DEFAULT 0 COMMENT 'Annual/monthly salary',
+    `hourly_rate` DECIMAL(10,4) DEFAULT 0 COMMENT 'Calculated or overridden',
+    `pay_frequency` VARCHAR(20) DEFAULT 'Monthly' COMMENT 'Annual|Monthly|BiWeekly|Weekly|Hourly',
+    `effective_date` DATE NOT NULL,
+    `end_date` DATE DEFAULT NULL,
+    `is_current` TINYINT(1) DEFAULT 1,
+    `reason` VARCHAR(100) DEFAULT NULL COMMENT 'New Hire, Promotion, Transfer, Raise',
+    `approved_by_person_id` INT(11) DEFAULT NULL,
+    `approval_status` VARCHAR(20) DEFAULT 'Approved' COMMENT 'Pending|Approved|Rejected',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`assignment_id`),
+    KEY `idx_employment` (`employment_id`),
+    KEY `idx_position` (`position_id`),
+    KEY `idx_current` (`is_current`),
+    KEY `idx_effective` (`effective_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Pay rate history (track raises with effective dates for overlap calculation)
+CREATE TABLE IF NOT EXISTS `0_hrm_pay_rate_history` (
+    `rate_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `employment_id` INT(11) NOT NULL,
+    `assignment_id` INT(11) DEFAULT NULL,
+    `old_salary` DECIMAL(15,2) DEFAULT 0,
+    `new_salary` DECIMAL(15,2) DEFAULT 0,
+    `old_hourly_rate` DECIMAL(10,4) DEFAULT 0,
+    `new_hourly_rate` DECIMAL(10,4) DEFAULT 0,
+    `effective_date` DATE NOT NULL,
+    `reason` VARCHAR(100) DEFAULT NULL,
+    `approved_by_person_id` INT(11) DEFAULT NULL,
+    `approval_status` VARCHAR(20) DEFAULT 'Approved',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`rate_id`),
+    KEY `idx_employment` (`employment_id`),
+    KEY `idx_effective` (`effective_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Pay periods
+CREATE TABLE IF NOT EXISTS `0_hrm_pay_periods` (
+    `period_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `period_name` VARCHAR(50) NOT NULL,
+    `period_start` DATE NOT NULL,
+    `period_end` DATE NOT NULL,
+    `pay_date` DATE NOT NULL,
+    `frequency` VARCHAR(20) NOT NULL COMMENT 'Weekly|BiWeekly|Monthly|Quarterly',
+    `status` VARCHAR(20) DEFAULT 'Open' COMMENT 'Open|Processing|Closed|Paid',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`period_id`),
+    KEY `idx_dates` (`period_start`, `period_end`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Pay Elements (earnings, deductions, contributions)
 CREATE TABLE IF NOT EXISTS `0_fa_pay_elements` (
     `element_id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -270,20 +328,6 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_payroll_entries` (
     KEY `idx_element` (`element_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Leave Balances
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_balances` (
-    `balance_id` INT(11) NOT NULL AUTO_INCREMENT,
-    `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id',
-    `leave_type` VARCHAR(50) NOT NULL COMMENT 'Annual, Sick, Personal, etc.',
-    `total_days` DECIMAL(5,1) DEFAULT 0,
-    `used_days` DECIMAL(5,1) DEFAULT 0,
-    `year` INT(4) NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`balance_id`),
-    UNIQUE KEY `idx_person_type_year` (`person_id`, `leave_type`, `year`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Employment Status Lookup
 CREATE TABLE IF NOT EXISTS `0_ksf_hrm_employment_status` (
     `status_id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -292,19 +336,6 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_employment_status` (
     `is_active` TINYINT(1) DEFAULT 1,
     PRIMARY KEY (`status_id`),
     UNIQUE KEY `idx_code` (`status_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Leave Types Lookup
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_leave_types` (
-    `leave_type_id` INT(11) NOT NULL AUTO_INCREMENT,
-    `type_code` VARCHAR(20) NOT NULL,
-    `type_name` VARCHAR(100) NOT NULL,
-    `default_days` DECIMAL(5,1) DEFAULT 0 COMMENT 'Default annual allocation',
-    `is_paid` TINYINT(1) DEFAULT 1,
-    `is_active` TINYINT(1) DEFAULT 1,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`leave_type_id`),
-    UNIQUE KEY `idx_code` (`type_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Role Dictionary seed data

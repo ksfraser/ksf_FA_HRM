@@ -1,22 +1,22 @@
 <?php
 /**
- * DB functions for ksf_hrm_leave_balances table
+ * DB functions for 0_leave_balances table
  */
 
 function write_leave_balance($balance_id, $data) {
     if ($balance_id) {
-        $sql = "UPDATE `" . TB_PREF . "ksf_hrm_leave_balances` SET ";
+        $sql = "UPDATE `" . TB_PREF . "leave_balances` SET ";
         $sets = array();
-        foreach (array('person_id', 'leave_type_id', 'year', 'allocated_days', 'used_days', 'carried_over') as $field) {
+        foreach (array('person_id', 'employment_id', 'leave_type_id', 'year', 'entitlement', 'used', 'balance', 'carry_over') as $field) {
             if (isset($data[$field])) {
                 $sets[] = "`$field` = " . db_escape($data[$field]);
             }
         }
         $sql .= implode(', ', $sets) . " WHERE `balance_id` = " . db_escape($balance_id);
     } else {
-        $sql = "INSERT INTO `" . TB_PREF . "ksf_hrm_leave_balances` SET ";
+        $sql = "INSERT INTO `" . TB_PREF . "leave_balances` SET ";
         $sets = array();
-        foreach (array('person_id', 'leave_type_id', 'year', 'allocated_days', 'used_days', 'carried_over') as $field) {
+        foreach (array('person_id', 'employment_id', 'leave_type_id', 'year', 'entitlement', 'used', 'balance', 'carry_over') as $field) {
             if (isset($data[$field])) {
                 $sets[] = "`$field` = " . db_escape($data[$field]);
             }
@@ -29,9 +29,9 @@ function write_leave_balance($balance_id, $data) {
 }
 
 function get_leave_balance($balance_id) {
-    $sql = "SELECT lb.*, lt.leave_type_name, p.name as employee_name
-        FROM `" . TB_PREF . "ksf_hrm_leave_balances` lb
-        LEFT JOIN `" . TB_PREF . "leave_types` lt ON lb.leave_type_id = lt.id
+    $sql = "SELECT lb.*, lt.type_name as leave_type_name, p.name as employee_name
+        FROM `" . TB_PREF . "leave_balances` lb
+        LEFT JOIN `" . TB_PREF . "leave_types` lt ON lb.leave_type_id = lt.leave_type_id
         LEFT JOIN `" . TB_PREF . "crm_persons` p ON lb.person_id = p.id
         WHERE lb.`balance_id` = " . db_escape($balance_id);
     $result = db_query($sql, "Failed to get leave balance");
@@ -42,12 +42,12 @@ function get_employee_leave_balances($person_id, $year = null) {
     if (!$year) {
         $year = date('Y');
     }
-    $sql = "SELECT lb.*, lt.leave_type_name
-        FROM `" . TB_PREF . "ksf_hrm_leave_balances` lb
-        LEFT JOIN `" . TB_PREF . "leave_types` lt ON lb.leave_type_id = lt.id
+    $sql = "SELECT lb.*, lt.type_name as leave_type_name
+        FROM `" . TB_PREF . "leave_balances` lb
+        LEFT JOIN `" . TB_PREF . "leave_types` lt ON lb.leave_type_id = lt.leave_type_id
         WHERE lb.`person_id` = " . db_escape($person_id) . "
         AND lb.`year` = " . (int)$year . "
-        ORDER BY lt.leave_type_name";
+        ORDER BY lt.type_name";
     return db_query($sql, "Failed to get employee leave balances");
 }
 
@@ -55,8 +55,9 @@ function update_leave_usage($person_id, $leave_type_id, $days, $year = null) {
     if (!$year) {
         $year = date('Y');
     }
-    $sql = "UPDATE `" . TB_PREF . "ksf_hrm_leave_balances` 
-        SET `used_days` = `used_days` + " . db_escape($days) . "
+    $sql = "UPDATE `" . TB_PREF . "leave_balances` 
+        SET `used` = `used` + " . db_escape($days) . ",
+            `balance` = `balance` - " . db_escape($days) . "
         WHERE `person_id` = " . db_escape($person_id) . "
         AND `leave_type_id` = " . db_escape($leave_type_id) . "
         AND `year` = " . (int)$year;
@@ -64,7 +65,7 @@ function update_leave_usage($person_id, $leave_type_id, $days, $year = null) {
 }
 
 function delete_leave_balance($balance_id) {
-    $sql = "DELETE FROM `" . TB_PREF . "ksf_hrm_leave_balances` WHERE `balance_id` = " . db_escape($balance_id);
+    $sql = "DELETE FROM `" . TB_PREF . "leave_balances` WHERE `balance_id` = " . db_escape($balance_id);
     db_query($sql, "Failed to delete leave balance");
 }
 ?>

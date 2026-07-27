@@ -364,13 +364,13 @@ function insert_benefit($data)
 
 function get_leave_types()
 {
-    $sql = "SELECT * FROM " . TB_PREF . "ksf_hrm_leave_types ORDER BY type_name";
+    $sql = "SELECT * FROM " . TB_PREF . "leave_types ORDER BY type_name";
     return db_query($sql);
 }
 
 function insert_leave_type($data)
 {
-    $sql = "INSERT INTO " . TB_PREF . "ksf_hrm_leave_types
+    $sql = "INSERT INTO " . TB_PREF . "leave_types
             (type_code, type_name, default_days, is_paid, is_active)
             VALUES (" .
         db_escape($data['type_code']) . ", " .
