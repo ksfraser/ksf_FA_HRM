@@ -4,15 +4,13 @@ include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
 
 if (isset($_POST['save_grade'])) {
     insert_grade($_POST);
-    display_notification(_("Grade added successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=grades">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=grades');
     exit;
 }
 
 if (isset($_POST['update_grade'])) {
     update_grade($_POST);
-    display_notification(_("Grade updated successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=grades">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=grades');
     exit;
 }
 

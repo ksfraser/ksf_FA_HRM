@@ -4,8 +4,8 @@ include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
 
 if (isset($_POST['save_dept'])) {
     insert_department($_POST);
-    display_notification(_("Department added successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=departments">';
+    $url = $_SERVER['PHP_SELF'] . '?view=departments';
+    header('Location: ' . $url);
     exit;
 }
 

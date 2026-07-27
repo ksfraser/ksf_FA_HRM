@@ -4,15 +4,13 @@ include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
 
 if (isset($_POST['save_employee'])) {
     insert_employee($_POST);
-    display_notification(_("Employee added successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=employees">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=employees');
     exit;
 }
 
 if (isset($_POST['update_employee'])) {
     update_employee($_POST);
-    display_notification(_("Employee updated successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=employees">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=employees');
     exit;
 }
 

@@ -4,8 +4,7 @@ include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
 
 if (isset($_POST['save_leave_type'])) {
     insert_leave_type($_POST);
-    display_notification(_("Leave type added successfully"));
-    echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['PHP_SELF'] . '?view=leave_types">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=leave_types');
     exit;
 }
 

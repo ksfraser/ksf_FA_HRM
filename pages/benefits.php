@@ -12,12 +12,7 @@ $View = isset($_GET['view']) ? $_GET['view'] : (isset($_POST['view']) ? $_POST['
 // Handle form submission
 if (isset($_POST['save_benefit'])) {
     $result = insert_benefit($_POST);
-    if ($result) {
-        display_notification(_("Benefit saved successfully."));
-    } else {
-        display_error(_("Could not save benefit."));
-    }
-    echo '<meta http-equiv="refresh" content="0;url=' . $path_to_root . '/modules/ksf_FA_HRM/pages/benefits.php?view=benefits">';
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?view=benefits');
     exit;
 }
 
