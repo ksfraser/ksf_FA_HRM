@@ -1,31 +1,45 @@
 <?php
 $path_to_root = "../..";
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+$page_security = 'SA_HRM_DEPARTMENTS';
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
 
-// Handle department insert
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Team.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Role.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/RoleDictionary.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Position.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/TeamRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/RoleRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/OrgHierarchyService.php");
+
+use ksfraser\FrontAccounting\HRM\Service\OrgHierarchyService;
+
+$service = new OrgHierarchyService();
+
 if (isset($_POST['save_dept'])) {
-    insert_department($_POST);
+    $service->saveDepartment($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=departments');
     exit;
 }
 
-// Handle team insert
 if (isset($_POST['save_team'])) {
-    insert_team($_POST);
+    $service->saveTeam($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=departments&dept=' . (int)$_POST['department_id']);
     exit;
 }
 
-// Handle team update
 if (isset($_POST['update_team'])) {
-    update_team($_POST);
+    $service->updateTeam((int)$_POST['team_id'], $_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=departments&dept=' . (int)$_POST['department_id']);
     exit;
 }
 
-// Handle role insert (clone from dictionary)
 if (isset($_POST['save_role'])) {
-    insert_role($_POST);
+    $service->saveRole($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=departments&dept=' . (int)$_POST['department_id']);
     exit;
 }
@@ -35,48 +49,16 @@ $show_add_form = isset($_GET['add']);
 $show_team_form = isset($_GET['add_team']);
 $show_role_form = isset($_GET['add_role']);
 
-$dept_list = db_query("SELECT * FROM " . TB_PREF . "hrm_departments ORDER BY department_code");
-$role_dict = get_role_dictionary();
+$dept_list = $service->listDepartments();
+$role_dict = $service->getRoleDictionary();
 
 $teams = null;
 $roles = null;
 $positions = null;
 if ($selected_dept > 0) {
-    $teams = get_teams_for_department($selected_dept);
-    $roles = get_roles_for_department($selected_dept);
-    $positions = get_positions_for_department($selected_dept);
-}
-
-function render_team_tree($teams, $parentId, $deptId, $depth = 0)
-{
-    if (!$teams) return;
-    $has_children = false;
-
-    db_data_seek($teams);
-    while ($row = db_fetch_assoc($teams)) {
-        if ((int)$row['parent_team_id'] !== (int)$parentId) continue;
-        $has_children = true;
-
-        $indent = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
-        $badge = $row['is_active']
-            ? '<span class="badge badge-success">' . _("Active") . '</span>'
-            : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-
-        echo '<tr>';
-        echo '<td>' . $indent . ($depth > 0 ? '<i class="fa fa-level-down-alt"></i> ' : '<i class="fa fa-users"></i> ')
-             . '<strong>' . html_entity_decode($row['team_code']) . '</strong> - '
-             . html_entity_decode($row['team_name']) . '</td>';
-        echo '<td>' . html_entity_decode($row['description'] ?? '') . '</td>';
-        echo '<td class="text-center">' . $badge . '</td>';
-        echo '<td class="text-right"><a href="?view=departments&dept=' . $deptId . '&edit_team=' . (int)$row['team_id'] . '" class="btn btn-outline-secondary btn-sm">' . _("Edit") . '</a></td>';
-        echo '</tr>';
-
-        render_team_tree($teams, $row['team_id'], $deptId, $depth + 1);
-    }
-
-    if (!$has_children && $parentId === null) {
-        // Top-level check done
-    }
+    $teams = $service->getTeamsForDepartment($selected_dept);
+    $roles = $service->getRolesForDepartment($selected_dept);
+    $positions = $service->getPositionsForDepartment($selected_dept);
 }
 ?>
 <div class="card mb-3">
@@ -138,37 +120,35 @@ function render_team_tree($teams, $parentId, $deptId, $depth = 0)
                 </tr>
             </thead>
             <tbody>
-            <?php
-            if ($dept_list && db_num_rows($dept_list)) {
-                while ($row = db_fetch_assoc($dept_list)) {
-                    $badge = $row['is_active']
-                        ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                        : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                    $active = ($selected_dept == $row['department_id']) ? 'table-active' : '';
-                    echo '<tr class="' . $active . '">';
-                    echo '<td><strong>' . html_entity_decode($row['department_code']) . '</strong></td>';
-                    echo '<td>' . html_entity_decode($row['department_name']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['description']) . '</td>';
-                    echo '<td class="text-center">' . $badge . '</td>';
-                    echo '<td class="text-right"><a href="?view=departments&dept=' . (int)$row['department_id'] . '" class="btn btn-outline-primary btn-sm">' . _("Teams & Roles") . '</a></td>';
-                    echo '</tr>';
-                }
-            } else {
-                echo '<tr><td colspan="5" class="text-center text-muted">' . _("No departments found.") . '</td></tr>';
-            }
-            ?>
+            <?php if (!empty($dept_list)): ?>
+                <?php foreach ($dept_list as $row): ?>
+                    <tr class="<?php echo ($selected_dept == $row->getDepartmentId()) ? 'table-active' : ''; ?>">
+                        <td><strong><?php echo html_entity_decode($row->getDepartmentCode() ?? ''); ?></strong></td>
+                        <td><?php echo html_entity_decode($row->getDepartmentName()); ?></td>
+                        <td><?php echo html_entity_decode($row->getDescription() ?? ''); ?></td>
+                        <td class="text-center">
+                            <?php if ($row->isActive()): ?>
+                                <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><a href="?view=departments&dept=<?php echo (int)$row->getDepartmentId(); ?>" class="btn btn-outline-primary btn-sm"><?php echo _("Teams & Roles"); ?></a></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="5" class="text-center text-muted"><?php echo _("No departments found."); ?></td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
-<?php if ($selected_dept > 0): ?>
-<?php
-$dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WHERE department_id = " . $selected_dept));
+<?php if ($selected_dept > 0):
+$dept = $service->getDepartment($selected_dept);
 ?>
 
 <div class="row">
-    <!-- Teams Panel -->
     <div class="col-md-6">
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -201,14 +181,11 @@ $dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WH
                                     <label><?php echo _("Parent Team"); ?></label>
                                     <select class="form-control" name="parent_team_id">
                                         <option value="0"><?php echo _("-- None (Top Level) --"); ?></option>
-                                        <?php
-                                        if ($teams) {
-                                            db_data_seek($teams);
-                                            while ($t = db_fetch_assoc($teams)) {
-                                                echo '<option value="' . (int)$t['team_id'] . '">' . htmlspecialchars($t['team_code'] . ' - ' . $t['team_name']) . '</option>';
-                                            }
-                                        }
-                                        ?>
+                                        <?php foreach ($teams as $t): ?>
+                                            <option value="<?php echo (int)$t->getTeamId(); ?>">
+                                                <?php echo htmlspecialchars($t->getTeamCode() . ' - ' . $t->getTeamName()); ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -233,29 +210,35 @@ $dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WH
                 <?php endif; ?>
 
                 <table class="table table-sm table-striped mb-0">
-                    <thead>
-                        <tr>
-                            <th><?php echo _("Team"); ?></th>
-                            <th><?php echo _("Description"); ?></th>
-                            <th class="text-center"><?php echo _("Status"); ?></th>
-                            <th></th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th><?php echo _("Team"); ?></th>
+                        <th><?php echo _("Description"); ?></th>
+                        <th class="text-center"><?php echo _("Status"); ?></th>
+                    </tr></thead>
                     <tbody>
-                    <?php
-                    if ($teams && db_num_rows($teams)) {
-                        render_team_tree($teams, null, $selected_dept);
-                    } else {
-                        echo '<tr><td colspan="4" class="text-muted text-center">' . _("No teams. Add one above.") . '</td></tr>';
-                    }
-                    ?>
+                    <?php if (!empty($teams)): ?>
+                        <?php foreach ($teams as $t): ?>
+                            <tr>
+                                <td><strong><?php echo html_entity_decode($t->getTeamCode()); ?></strong> - <?php echo html_entity_decode($t->getTeamName()); ?></td>
+                                <td><?php echo html_entity_decode($t->getDescription() ?? ''); ?></td>
+                                <td class="text-center">
+                                    <?php if ($t->isActive()): ?>
+                                        <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                                    <?php else: ?>
+                                        <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="3" class="text-muted text-center"><?php echo _("No teams. Add one above."); ?></td></tr>
+                    <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Roles Panel -->
     <div class="col-md-6">
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -276,13 +259,11 @@ $dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WH
                                     <label><?php echo _("Clone From (Dictionary)"); ?></label>
                                     <select class="form-control" name="role_dict_id" id="role_dict_select">
                                         <option value="0"><?php echo _("-- Custom (no source) --"); ?></option>
-                                        <?php
-                                        if ($role_dict) {
-                                            while ($rd = db_fetch_assoc($role_dict)) {
-                                                echo '<option value="' . (int)$rd['role_dict_id'] . '">' . htmlspecialchars($rd['role_name']) . '</option>';
-                                            }
-                                        }
-                                        ?>
+                                        <?php foreach ($role_dict as $rd): ?>
+                                            <option value="<?php echo (int)$rd->getRoleDictId(); ?>">
+                                                <?php echo htmlspecialchars($rd->getRoleName()); ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -304,68 +285,64 @@ $dept = db_fetch_assoc(db_query("SELECT * FROM " . TB_PREF . "hrm_departments WH
                 <?php endif; ?>
 
                 <table class="table table-sm table-striped mb-0">
-                    <thead>
-                        <tr>
-                            <th><?php echo _("Role Name"); ?></th>
-                            <th><?php echo _("Source"); ?></th>
-                            <th><?php echo _("Description"); ?></th>
-                            <th class="text-center"><?php echo _("Status"); ?></th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th><?php echo _("Role Name"); ?></th>
+                        <th><?php echo _("Source"); ?></th>
+                        <th><?php echo _("Description"); ?></th>
+                        <th class="text-center"><?php echo _("Status"); ?></th>
+                    </tr></thead>
                     <tbody>
-                    <?php
-                    if ($roles && db_num_rows($roles)) {
-                        while ($r = db_fetch_assoc($roles)) {
-                            $badge = $r['is_active']
-                                ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                                : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                            $source = $r['role_dict_id'] ? html_entity_decode($r['dict_name'] ?? '—') : '<em>' . _("Custom") . '</em>';
-                            echo '<tr>';
-                            echo '<td><strong>' . html_entity_decode($r['role_name']) . '</strong></td>';
-                            echo '<td>' . $source . '</td>';
-                            echo '<td>' . html_entity_decode($r['description'] ?? '') . '</td>';
-                            echo '<td class="text-center">' . $badge . '</td>';
-                            echo '</tr>';
-                        }
-                    } else {
-                        echo '<tr><td colspan="4" class="text-muted text-center">' . _("No roles. Clone one from dictionary above.") . '</td></tr>';
-                    }
-                    ?>
+                    <?php if (!empty($roles)): ?>
+                        <?php foreach ($roles as $r): ?>
+                            <tr>
+                                <td><strong><?php echo html_entity_decode($r->getRoleName()); ?></strong></td>
+                                <td><?php echo $r->getRoleDictId() ? html_entity_decode($r->toArray()['dict_name'] ?? '—') : '<em>' . _("Custom") . '</em>'; ?></td>
+                                <td><?php echo html_entity_decode($r->getDescription() ?? ''); ?></td>
+                                <td class="text-center">
+                                    <?php if ($r->isActive()): ?>
+                                        <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                                    <?php else: ?>
+                                        <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" class="text-muted text-center"><?php echo _("No roles. Clone one from dictionary above."); ?></td></tr>
+                    <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <?php if ($positions && db_num_rows($positions)): ?>
+        <?php if (!empty($positions)): ?>
         <div class="card mb-3">
             <div class="card-header">
                 <h6 class="mb-0"><?php echo _("Positions") . ' — ' . html_entity_decode($dept['department_name']); ?></h6>
             </div>
             <div class="card-body">
                 <table class="table table-sm table-striped mb-0">
-                    <thead>
-                        <tr>
-                            <th><?php echo _("Code"); ?></th>
-                            <th><?php echo _("Team"); ?></th>
-                            <th><?php echo _("Role"); ?></th>
-                            <th class="text-center"><?php echo _("Status"); ?></th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th><?php echo _("Code"); ?></th>
+                        <th><?php echo _("Team"); ?></th>
+                        <th><?php echo _("Role"); ?></th>
+                        <th class="text-center"><?php echo _("Status"); ?></th>
+                    </tr></thead>
                     <tbody>
-                    <?php
-                    db_data_seek($positions);
-                    while ($p = db_fetch_assoc($positions)) {
-                        $badge = $p['is_active']
-                            ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                            : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                        echo '<tr>';
-                        echo '<td><strong>' . html_entity_decode($p['position_code']) . '</strong></td>';
-                        echo '<td>' . html_entity_decode($p['team_code'] ?? '—') . ' - ' . html_entity_decode($p['team_name'] ?? '') . '</td>';
-                        echo '<td>' . html_entity_decode($p['role_name']) . '</td>';
-                        echo '<td class="text-center">' . $badge . '</td>';
-                        echo '</tr>';
-                    }
-                    ?>
+                    <?php foreach ($positions as $p): ?>
+                        <tr>
+                            <td><strong><?php echo html_entity_decode($p->getPositionCode()); ?></strong></td>
+                            <td><?php echo html_entity_decode($p->toArray()['team_code'] ?? '—'); ?></td>
+                            <td><?php echo html_entity_decode($p->toArray()['role_name'] ?? ''); ?></td>
+                            <td class="text-center">
+                                <?php if ($p->isActive()): ?>
+                                    <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                                <?php else: ?>
+                                    <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -385,15 +362,12 @@ document.getElementById('toggle-add').addEventListener('click', function(e) {
         window.location.href = '?view=departments&add=1';
     }
 });
-
 var dictSelect = document.getElementById('role_dict_select');
 var nameInput = document.getElementById('role_name_input');
 if (dictSelect && nameInput) {
     dictSelect.addEventListener('change', function() {
         var selected = this.options[this.selectedIndex];
-        if (this.value > 0) {
-            nameInput.value = selected.text;
-        }
+        if (this.value > 0) nameInput.value = selected.text;
     });
 }
 </script>

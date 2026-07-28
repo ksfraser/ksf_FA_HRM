@@ -1,15 +1,26 @@
 <?php
 $path_to_root = "../..";
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+$page_security = 'SA_HRM_GRADES';
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
+
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Grade.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/GradeRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/GradeService.php");
+
+use ksfraser\FrontAccounting\HRM\Service\GradeService;
+
+$service = new GradeService();
 
 if (isset($_POST['save_grade'])) {
-    insert_grade($_POST);
+    $service->create($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=grades');
     exit;
 }
 
 if (isset($_POST['update_grade'])) {
-    update_grade($_POST);
+    $service->update((int)$_POST['grade_id'], $_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=grades');
     exit;
 }
@@ -18,10 +29,11 @@ $show_form = isset($_GET['add']);
 $edit_mode = isset($_GET['edit']);
 $edit_row = null;
 if ($edit_mode) {
-    $edit_id = (int)$_GET['edit'];
-    $edit_row = get_grade($edit_id);
+    $edit_row = $service->getById((int)$_GET['edit']);
     $show_form = true;
 }
+
+$grades = $service->listAll();
 ?>
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -106,33 +118,27 @@ if ($edit_mode) {
                 </tr>
             </thead>
             <tbody>
-            <?php
-            $result = db_query(
-                "SELECT grade_id, grade_code, grade_name, min_salary, max_salary, description, is_active
-                FROM " . TB_PREF . "hrm_grades
-                ORDER BY grade_name",
-                _("Could not query grades")
-            );
-
-            if (db_num_rows($result) == 0) {
-                echo '<tr><td colspan="7" class="text-center text-muted">' . _("No grades found.") . '</td></tr>';
-            } else {
-                while ($row = db_fetch_assoc($result)) {
-                    $badge = $row['is_active']
-                        ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                        : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                    echo '<tr>';
-                    echo '<td>' . html_entity_decode($row['grade_code']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['grade_name']) . '</td>';
-                    echo '<td class="text-right">' . price_format($row['min_salary']) . '</td>';
-                    echo '<td class="text-right">' . price_format($row['max_salary']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['description']) . '</td>';
-                    echo '<td class="text-center">' . $badge . '</td>';
-                    echo '<td class="text-right"><a href="?view=grades&edit=' . (int)$row['grade_id'] . '" class="btn btn-outline-secondary btn-sm">' . _("Edit") . '</a></td>';
-                    echo '</tr>';
-                }
-            }
-            ?>
+            <?php if (!empty($grades)): ?>
+                <?php foreach ($grades as $grade): ?>
+                    <tr>
+                        <td><?php echo html_entity_decode($grade->getGradeCode()); ?></td>
+                        <td><?php echo html_entity_decode($grade->getGradeName()); ?></td>
+                        <td class="text-right"><?php echo price_format($grade->getMinSalary()); ?></td>
+                        <td class="text-right"><?php echo price_format($grade->getMaxSalary()); ?></td>
+                        <td><?php echo html_entity_decode($grade->getDescription() ?? ''); ?></td>
+                        <td class="text-center">
+                            <?php if ($grade->isActive()): ?>
+                                <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><a href="?view=grades&edit=<?php echo (int)$grade->getGradeId(); ?>" class="btn btn-outline-secondary btn-sm"><?php echo _("Edit"); ?></a></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="7" class="text-center text-muted"><?php echo _("No grades found."); ?></td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>

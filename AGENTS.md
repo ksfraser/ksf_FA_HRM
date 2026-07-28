@@ -33,7 +33,7 @@ FA Module for Human Resources Management - org hierarchy (departments, teams, ro
 | `0_hrm_positions` | Positions with auto-generated DEPT-TEAM-### codes |
 | `0_hrm_grades` | Salary grades with min/max ranges |
 | `0_hrm_contacts_employment` | Core employee record (FK to 0_crm_persons) |
-| `0_ksf_hrm_employment_status` | Status lookup (Active, Probation, etc.) |
+| `0_hrm_employment_status` | Status lookup (Active, Probation, etc.) |
 
 ### Compensation & Payroll Tables
 | Table | Purpose |
@@ -44,10 +44,10 @@ FA Module for Human Resources Management - org hierarchy (departments, teams, ro
 | `0_hrm_pay_elements` | Earnings, deductions, contributions |
 | `0_hrm_salary_structure` | Links grades to pay elements |
 | `0_hrm_separation_reasons` | Termination reason lookup |
-| `0_ksf_hrm_benefits` | Benefit definitions |
-| `0_ksf_hrm_employee_benefits` | Employee benefit assignments |
-| `0_ksf_hrm_payroll` | Payroll run records |
-| `0_ksf_hrm_payroll_entries` | Payroll line items |
+| `0_hrm_benefits` | Benefit definitions |
+| `0_hrm_employee_benefits` | Employee benefit assignments |
+| `0_hrm_payroll` | Payroll run records |
+| `0_hrm_payroll_entries` | Payroll line items |
 
 ### Employee Detail Tables (`0_hrm_*`)
 | Table | Purpose |

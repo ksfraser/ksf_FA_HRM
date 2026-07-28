@@ -84,18 +84,18 @@ ksf_FA_HRM is the FrontAccounting adapter for Human Resources Management. It pro
 | `0_hrm_roles` | `role_id` | — | `department_id` → `0_hrm_departments`, `role_dict_id` → `0_hrm_role_dictionary` | `department_id`, `role_dict_id` |
 | `0_hrm_positions` | `position_id` | `position_code` | `department_id` → `0_hrm_departments`, `team_id` → `0_hrm_teams`, `role_id` → `0_hrm_roles` | `department_id`, `team_id`, `role_id` |
 | `0_hrm_grades` | `grade_id` | `grade_name` | — | `grade_name` |
-| `0_hrm_contacts_employment` | `employment_id` | `person_id` | `person_id` → `0_crm_persons.id`, `department_id` → `0_hrm_departments`, `position_id` → `0_hrm_positions`, `grade_id` → `0_hrm_grades`, `status_id` → `0_ksf_hrm_employment_status` | `person_id`, `department_id`, `position_id`, `grade_id` |
-| `0_ksf_hrm_employment_status` | `status_id` | `status_name` | — | `status_name` |
+| `0_hrm_contacts_employment` | `employment_id` | `person_id` | `person_id` → `0_crm_persons.id`, `department_id` → `0_hrm_departments`, `position_id` → `0_hrm_positions`, `grade_id` → `0_hrm_grades`, `status_id` → `0_hrm_employment_status` | `person_id`, `department_id`, `position_id`, `grade_id` |
+| `0_hrm_employment_status` | `status_id` | `status_name` | — | `status_name` |
 | `0_hrm_work_assignments` | `assignment_id` | — | `employment_id` → `0_hrm_contacts_employment`, `position_id` → `0_hrm_positions`, `grade_id` → `0_hrm_grades` | `employment_id`, `position_id`, `grade_id` |
 | `0_hrm_pay_rate_history` | `rate_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id`, `effective_date` |
 | `0_hrm_pay_periods` | `period_id` | — | — | `period_start_date`, `status` |
 | `0_hrm_pay_elements` | `element_id` | `element_name` | — | `element_type` |
 | `0_hrm_salary_structure` | `structure_id` | — | `grade_id` → `0_hrm_grades`, `element_id` → `0_hrm_pay_elements` | `grade_id`, `element_id` |
 | `0_hrm_separation_reasons` | `reason_id` | `reason_name` | — | `reason_name` |
-| `0_ksf_hrm_benefits` | `benefit_id` | `benefit_name` | — | `benefit_name` |
-| `0_ksf_hrm_employee_benefits` | `emp_benefit_id` | — | `employment_id` → `0_hrm_contacts_employment`, `benefit_id` → `0_ksf_hrm_benefits` | `employment_id`, `benefit_id` |
-| `0_ksf_hrm_payroll` | `payroll_id` | — | `period_id` → `0_hrm_pay_periods` | `period_id`, `status` |
-| `0_ksf_hrm_payroll_entries` | `entry_id` | — | `payroll_id` → `0_ksf_hrm_payroll`, `employment_id` → `0_hrm_contacts_employment`, `element_id` → `0_hrm_pay_elements` | `payroll_id`, `employment_id`, `element_id` |
+| `0_hrm_benefits` | `benefit_id` | `benefit_name` | — | `benefit_name` |
+| `0_hrm_employee_benefits` | `assignment_id` | — | `person_id` → `0_crm_persons.id`, `benefit_id` → `0_hrm_benefits` | `person_id`, `benefit_id` |
+| `0_hrm_payroll` | `payroll_id` | — | `person_id` → `0_crm_persons.id` | `person_id`, `status` |
+| `0_hrm_payroll_entries` | `entry_id` | — | `payroll_id` → `0_hrm_payroll`, `element_id` → `0_hrm_pay_elements` | `payroll_id`, `element_id` |
 | `0_hrm_contacts_pii` | `pii_id` | `employment_id` | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
 | `0_hrm_contacts_banking` | `banking_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
 | `0_hrm_dependent_details` | `dependent_id` | — | `employment_id` → `0_hrm_contacts_employment` | `employment_id` |
@@ -114,7 +114,7 @@ ksfraser\FrontAccounting\HRM\
 
 ### 4.2 GL Integration
 
-Payroll GL entries are posted via `PayrollGLentries` class. GL account codes are configurable per company. Payroll runs use the `0_ksf_hrm_payroll` table to track status (Open → Processing → Closed → Paid).
+Payroll GL entries are posted via `PayrollGLentries` class. GL account codes are configurable per company. Payroll runs use the `0_hrm_payroll` table to track status (Open → Processing → Closed → Paid).
 
 ### 4.3 FA Module Integration
 

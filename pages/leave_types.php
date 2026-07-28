@@ -1,15 +1,27 @@
 <?php
 $path_to_root = "../..";
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+$page_security = 'SA_HRM_LEAVE_TYPES';
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
+
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/LookupRepository.php");
+
+use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
+
+$lookupRepo = new LookupRepository();
 
 if (isset($_POST['save_leave_type'])) {
-    insert_leave_type($_POST);
+    $lookupRepo->saveLeaveType($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=leave_types');
     exit;
 }
 
 $show_form = isset($_GET['add']);
+
+$leave_types = $lookupRepo->getLeaveTypes();
 ?>
+
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><?php echo _("Leave Types"); ?></h5>
@@ -76,27 +88,25 @@ $show_form = isset($_GET['add']);
                 </tr>
             </thead>
             <tbody>
-            <?php
-            $result = get_leave_types();
-
-            if (db_num_rows($result) == 0) {
-                echo '<tr><td colspan="5" class="text-center text-muted">' . _("No leave types found.") . '</td></tr>';
-            } else {
-                while ($row = db_fetch_assoc($result)) {
-                    $badge = $row['is_active']
-                        ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                        : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                    $paid = $row['is_paid'] ? _("Yes") : _("No");
-                    echo '<tr>';
-                    echo '<td>' . html_entity_decode($row['type_code']) . '</td>';
-                    echo '<td>' . html_entity_decode($row['type_name']) . '</td>';
-                    echo '<td class="text-right">' . number_format($row['default_days'], 1) . '</td>';
-                    echo '<td class="text-center">' . $paid . '</td>';
-                    echo '<td class="text-center">' . $badge . '</td>';
-                    echo '</tr>';
-                }
-            }
-            ?>
+            <?php if (empty($leave_types)): ?>
+                <tr><td colspan="5" class="text-center text-muted"><?php echo _("No leave types found."); ?></td></tr>
+            <?php else: ?>
+                <?php foreach ($leave_types as $lt): ?>
+                    <tr>
+                        <td><?php echo html_entity_decode($lt['type_code']); ?></td>
+                        <td><?php echo html_entity_decode($lt['type_name']); ?></td>
+                        <td class="text-right"><?php echo number_format($lt['default_days'], 1); ?></td>
+                        <td class="text-center"><?php echo $lt['is_paid'] ? _("Yes") : _("No"); ?></td>
+                        <td class="text-center">
+                            <?php if ($lt['is_active']): ?>
+                                <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>

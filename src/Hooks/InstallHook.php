@@ -15,11 +15,11 @@ namespace ksfraser\FrontAccounting\HRM\Hooks;
  *   0_hrm_positions, 0_hrm_grades, 0_hrm_contacts_employment
  * - Employment detail: 0_hrm_contacts_pii, 0_hrm_contacts_banking, 0_hrm_dependent_details
  * - Compensation: 0_hrm_pay_periods, 0_hrm_pay_rate_history, 0_hrm_work_assignments
- * - Benefits: 0_ksf_hrm_benefits, 0_ksf_hrm_employee_benefits
- * - Payroll: 0_ksf_hrm_payroll, 0_ksf_hrm_payroll_entries
+ * - Benefits: 0_hrm_benefits, 0_hrm_employee_benefits
+ * - Payroll: 0_hrm_payroll, 0_hrm_payroll_entries
  * - Pay elements: 0_hrm_pay_elements, 0_hrm_salary_structure
  * - Separation: 0_hrm_separation_reasons
- * - Employment status: 0_ksf_hrm_employment_status
+ * - Employment status: 0_hrm_employment_status
  *
  * NOT owned by HRM (moved to ksf_FA_Leave):
  * - 0_leave_types, 0_leave_requests, 0_leave_balances, 0_leave_bank_config,
@@ -121,11 +121,11 @@ class InstallHook
             'hrm_pay_elements',
             'hrm_salary_structure',
             'hrm_separation_reasons',
-            'ksf_hrm_benefits',
-            'ksf_hrm_employee_benefits',
-            'ksf_hrm_payroll',
-            'ksf_hrm_payroll_entries',
-            'ksf_hrm_employment_status',
+            'hrm_benefits',
+            'hrm_employee_benefits',
+            'hrm_payroll',
+            'hrm_payroll_entries',
+            'hrm_employment_status',
         ];
 
         foreach ($tables as $table) {

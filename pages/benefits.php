@@ -1,27 +1,31 @@
 <?php
+$path_to_root = "../..";
 $page_security = 'SA_HRM_BENEFITS';
-$path_to_root = "../../..";
 include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Benefit.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/EmployeeBenefit.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/BenefitRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/BenefitsService.php");
+
+use ksfraser\FrontAccounting\HRM\Service\BenefitsService;
+
+$service = new BenefitsService();
 
 $selected_id = isset($_POST['selected_id']) ? $_POST['selected_id'] : (isset($_GET['selected_id']) ? $_GET['selected_id'] : '');
 $View = isset($_GET['view']) ? $_GET['view'] : (isset($_POST['view']) ? $_POST['view'] : '');
 
-// Handle form submission
 if (isset($_POST['save_benefit'])) {
-    $result = insert_benefit($_POST);
+    $service->create($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=benefits');
     exit;
 }
 
-$addNew = false;
-if (isset($_GET['addNew'])) {
-    $addNew = true;
-}
+$addNew = isset($_GET['addNew']);
 
-include_once($path_to_root . "/includes/page_header.inc");
+$benefits = $service->listAll(false);
 ?>
 
 <div class="card mb-3">
@@ -33,7 +37,7 @@ include_once($path_to_root . "/includes/page_header.inc");
     </div>
     <div class="card-body">
 
-<?php if ($addNew) { ?>
+<?php if ($addNew): ?>
         <div class="card mb-4">
             <div class="card-header">
                 <h6 class="mb-0"><?php echo _("Add New Benefit"); ?></h6>
@@ -72,14 +76,14 @@ include_once($path_to_root . "/includes/page_header.inc");
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="employer_contribution"><?php echo _("Employer Contribution"); ?></label>
-                                <input type="number" class="form-control" id="employer_contribution" name="employer_contribution" step="0.01" min="0" required />
+                                <label for="employer_rate"><?php echo _("Employer Rate"); ?></label>
+                                <input type="number" class="form-control" id="employer_rate" name="employer_rate" step="0.01" min="0" required />
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="employee_contribution"><?php echo _("Employee Contribution"); ?></label>
-                                <input type="number" class="form-control" id="employee_contribution" name="employee_contribution" step="0.01" min="0" required />
+                                <label for="employee_rate"><?php echo _("Employee Rate"); ?></label>
+                                <input type="number" class="form-control" id="employee_rate" name="employee_rate" step="0.01" min="0" required />
                             </div>
                         </div>
                     </div>
@@ -87,7 +91,7 @@ include_once($path_to_root . "/includes/page_header.inc");
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="gl_account_code"><?php echo _("GL Account Code"); ?></label>
-                                <input type="text" class="form-control" id="gl_account_code" name="gl_account_code" />
+                                <input type="text" class="form-control" id="gl_account_code" name="gl_code_expense" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -108,17 +112,11 @@ include_once($path_to_root . "/includes/page_header.inc");
                 </form>
             </div>
         </div>
-<?php } ?>
+<?php endif; ?>
 
-<?php
-// List benefits
-$SQL = "SELECT * FROM `" . TB_PREF . "ksf_hrm_benefits` ORDER BY benefit_code";
-$result = db_query($SQL, _("Could not retrieve benefits list."));
-
-if (db_num_rows($result) == 0) {
-    display_notification(_("No benefits found."));
-} else {
-?>
+<?php if (empty($benefits)): ?>
+    <div class="text-center text-muted"><?php echo _("No benefits found."); ?></div>
+<?php else: ?>
         <table class="table table-sm table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -131,30 +129,24 @@ if (db_num_rows($result) == 0) {
                 </tr>
             </thead>
             <tbody>
-<?php
-    while ($row = db_fetch($result)) {
-        $badgeClass = $row['is_active'] ? 'badge badge-success' : 'badge badge-secondary';
-        $statusText = $row['is_active'] ? _('Active') : _('Inactive');
-?>
+<?php foreach ($benefits as $benefit): ?>
                 <tr>
-                    <td><?php echo display_heading($row['benefit_code']); ?></td>
-                    <td><?php echo $row['benefit_name']; ?></td>
-                    <td><?php echo $row['benefit_type']; ?></td>
-                    <td><?php echo price_format($row['employer_contribution']); ?></td>
-                    <td><?php echo price_format($row['employee_contribution']); ?></td>
-                    <td><span class="<?php echo $badgeClass; ?>"><?php echo $statusText; ?></span></td>
+                    <td><?php echo display_heading($benefit->getBenefitCode()); ?></td>
+                    <td><?php echo $benefit->getBenefitName(); ?></td>
+                    <td><?php echo $benefit->getBenefitType(); ?></td>
+                    <td><?php echo price_format($benefit->getEmployerRate()); ?></td>
+                    <td><?php echo price_format($benefit->getEmployeeRate()); ?></td>
+                    <td>
+                        <?php if ($benefit->isActive()): ?>
+                            <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                        <?php else: ?>
+                            <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
-<?php
-    }
-?>
+<?php endforeach; ?>
             </tbody>
         </table>
-<?php
-}
-?>
+<?php endif; ?>
     </div>
 </div>
-
-<?php
-include_once($path_to_root . "/includes/page_footer.inc");
-?>

@@ -268,14 +268,22 @@ CREATE TABLE IF NOT EXISTS `0_hrm_dependent_details` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Benefits
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_benefits` (
+CREATE TABLE IF NOT EXISTS `0_hrm_benefits` (
     `benefit_id` INT(11) NOT NULL AUTO_INCREMENT,
     `benefit_code` VARCHAR(20) NOT NULL,
     `benefit_name` VARCHAR(100) NOT NULL,
     `benefit_type` VARCHAR(50) DEFAULT NULL,
-    `employer_contribution` DECIMAL(15,2) DEFAULT 0,
-    `employee_contribution` DECIMAL(15,2) DEFAULT 0,
-    `gl_account_code` VARCHAR(20) DEFAULT NULL,
+    `employer_rate` DECIMAL(15,2) DEFAULT 0,
+    `employee_rate` DECIMAL(15,2) DEFAULT 0,
+    `fixed_amount` DECIMAL(15,2) DEFAULT 0,
+    `is_percentage_based` TINYINT(1) DEFAULT 1,
+    `calculation_period` VARCHAR(20) DEFAULT 'Monthly' COMMENT 'Monthly|Annually|Per Pay Period',
+    `gl_code_expense` VARCHAR(20) DEFAULT NULL,
+    `gl_code_liability` VARCHAR(20) DEFAULT NULL,
+    `provider` VARCHAR(100) DEFAULT NULL,
+    `is_mandatory` TINYINT(1) DEFAULT 0,
+    `is_tax_deductible` TINYINT(1) DEFAULT 0,
+    `description` TEXT,
     `is_active` TINYINT(1) DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -284,22 +292,24 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_benefits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Employee Benefits (assignments)
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_employee_benefits` (
-    `assignment_id` INT(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `0_hrm_employee_benefits` (
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons.id',
     `benefit_id` INT(11) NOT NULL,
-    `start_date` DATE NOT NULL,
+    `effective_date` DATE NOT NULL,
     `end_date` DATE DEFAULT NULL,
-    `employee_contribution` DECIMAL(15,2) DEFAULT 0 COMMENT 'Override if needed',
+    `custom_employer_rate` DECIMAL(15,2) DEFAULT NULL COMMENT 'Override benefit rate',
+    `custom_employee_rate` DECIMAL(15,2) DEFAULT NULL COMMENT 'Override benefit rate',
+    `notes` TEXT,
     `is_active` TINYINT(1) DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`assignment_id`),
+    PRIMARY KEY (`id`),
     KEY `idx_person` (`person_id`),
     KEY `idx_benefit` (`benefit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Payroll
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_payroll` (
+CREATE TABLE IF NOT EXISTS `0_hrm_payroll` (
     `payroll_id` INT(11) NOT NULL AUTO_INCREMENT,
     `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons',
     `pay_period_start` DATE NOT NULL,
@@ -317,7 +327,7 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_payroll` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Payroll Entries (line items per payroll run)
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_payroll_entries` (
+CREATE TABLE IF NOT EXISTS `0_hrm_payroll_entries` (
     `entry_id` INT(11) NOT NULL AUTO_INCREMENT,
     `payroll_id` INT(11) NOT NULL,
     `element_id` INT(11) NOT NULL,
@@ -329,7 +339,7 @@ CREATE TABLE IF NOT EXISTS `0_ksf_hrm_payroll_entries` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Employment Status Lookup
-CREATE TABLE IF NOT EXISTS `0_ksf_hrm_employment_status` (
+CREATE TABLE IF NOT EXISTS `0_hrm_employment_status` (
     `status_id` INT(11) NOT NULL AUTO_INCREMENT,
     `status_code` VARCHAR(20) NOT NULL,
     `status_name` VARCHAR(100) NOT NULL,

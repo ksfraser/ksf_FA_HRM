@@ -1,15 +1,32 @@
 <?php
 $path_to_root = "../..";
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+$page_security = 'SA_HRM_POSITIONS';
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
+
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Position.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Team.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/RoleDictionary.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/TeamRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/RoleRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/PositionService.php");
+
+use ksfraser\FrontAccounting\HRM\Service\PositionService;
+
+$service = new PositionService();
 
 if (isset($_POST['save_position'])) {
-    insert_position($_POST);
+    $service->create($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=positions');
     exit;
 }
 
 if (isset($_POST['update_position'])) {
-    update_position($_POST);
+    $service->update((int)$_POST['position_id'], $_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=positions');
     exit;
 }
@@ -18,21 +35,20 @@ $show_form = isset($_GET['add']);
 $edit_mode = isset($_GET['edit']);
 $edit_row = null;
 if ($edit_mode) {
-    $edit_row = get_position((int)$_GET['edit']);
+    $edit_row = $service->getById((int)$_GET['edit']);
     $show_form = true;
 }
 
-$departments = get_departments();
+$departments = $service->getFormDropdowns()['departments'];
 
-// Pre-fetch teams/roles for selected department (for Add form)
 $selected_dept = 0;
 if ($show_form) {
     $selected_dept = $edit_mode ? ($edit_row['department_id'] ?? 0) : (int)($_POST['department_id'] ?? 0);
 }
-$teams_for_dept = $selected_dept > 0 ? get_teams_for_department($selected_dept) : null;
-$roles_for_dept = $selected_dept > 0 ? get_roles_for_department($selected_dept) : null;
+$teams_for_dept = $selected_dept > 0 ? $service->getTeamsForDepartment($selected_dept) : [];
+$roles_for_dept = $selected_dept > 0 ? $service->getRolesForDepartment($selected_dept) : [];
 
-$positions = get_positions_list();
+$positions = $service->listAll();
 ?>
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -57,16 +73,12 @@ $positions = get_positions_list();
                             <label><?php echo _("Department"); ?></label>
                             <select class="form-control" name="department_id" id="dept_select" required>
                                 <option value=""><?php echo _("-- Select Department --"); ?></option>
-                            <?php
-                            if ($departments) {
-                                while ($d = db_fetch_assoc($departments)) {
-                                    $sel = ($selected_dept == $d['department_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$d['department_id'] . '" ' . $sel . '>'
-                                         . htmlspecialchars($d['department_code'] . ' - ' . $d['department_name'])
-                                         . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($departments as $d): ?>
+                                <option value="<?php echo (int)$d->getDepartmentId(); ?>"
+                                    <?php echo ($selected_dept == $d->getDepartmentId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($d->getDepartmentCode() . ' - ' . $d->getDepartmentName()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -75,16 +87,12 @@ $positions = get_positions_list();
                             <label><?php echo _("Team"); ?></label>
                             <select class="form-control" name="team_id" id="team_select">
                                 <option value="0"><?php echo _("-- No Team (General) --"); ?></option>
-                            <?php
-                            if ($teams_for_dept) {
-                                while ($t = db_fetch_assoc($teams_for_dept)) {
-                                    $sel = ($edit_mode && $edit_row['team_id'] == $t['team_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$t['team_id'] . '" ' . $sel . '>'
-                                         . htmlspecialchars($t['team_code'] . ' - ' . $t['team_name'])
-                                         . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($teams_for_dept as $t): ?>
+                                <option value="<?php echo (int)$t->getTeamId(); ?>"
+                                    <?php echo ($edit_mode && ($edit_row['team_id'] ?? 0) == $t->getTeamId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($t->getTeamCode() . ' - ' . $t->getTeamName()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -93,16 +101,12 @@ $positions = get_positions_list();
                             <label><?php echo _("Role"); ?></label>
                             <select class="form-control" name="role_id" id="role_select" required>
                                 <option value=""><?php echo _("-- Select Role --"); ?></option>
-                            <?php
-                            if ($roles_for_dept) {
-                                while ($r = db_fetch_assoc($roles_for_dept)) {
-                                    $sel = ($edit_mode && $edit_row['role_id'] == $r['role_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$r['role_id'] . '" ' . $sel . '>'
-                                         . htmlspecialchars($r['role_name'])
-                                         . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($roles_for_dept as $r): ?>
+                                <option value="<?php echo (int)$r->getRoleId(); ?>"
+                                    <?php echo ($edit_mode && ($edit_row['role_id'] ?? 0) == $r->getRoleId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($r->getRoleName()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -156,25 +160,26 @@ $positions = get_positions_list();
                 </tr>
             </thead>
             <tbody>
-            <?php
-            if ($positions && db_num_rows($positions)) {
-                while ($row = db_fetch_assoc($positions)) {
-                    $badge = $row['is_active']
-                        ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                        : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                    echo '<tr>';
-                    echo '<td><strong>' . html_entity_decode($row['position_code']) . '</strong></td>';
-                    echo '<td>' . html_entity_decode($row['department_code'] ?? '') . '</td>';
-                    echo '<td>' . html_entity_decode($row['team_code'] ?? '—') . '</td>';
-                    echo '<td>' . html_entity_decode($row['role_name'] ?? '') . '</td>';
-                    echo '<td class="text-center">' . $badge . '</td>';
-                    echo '<td class="text-right"><a href="?view=positions&edit=' . (int)$row['position_id'] . '" class="btn btn-outline-secondary btn-sm">' . _("Edit") . '</a></td>';
-                    echo '</tr>';
-                }
-            } else {
-                echo '<tr><td colspan="6" class="text-center text-muted">' . _("No positions found.") . '</td></tr>';
-            }
-            ?>
+            <?php if (!empty($positions)): ?>
+                <?php foreach ($positions as $pos): ?>
+                    <tr>
+                        <td><strong><?php echo html_entity_decode($pos->getPositionCode()); ?></strong></td>
+                        <td><?php echo html_entity_decode($pos->getDepartmentCode() ?? ''); ?></td>
+                        <td><?php echo html_entity_decode($pos->getTeamCode() ?? '-'); ?></td>
+                        <td><?php echo html_entity_decode($pos->getRoleName() ?? ''); ?></td>
+                        <td class="text-center">
+                            <?php if ($pos->isActive()): ?>
+                                <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><a href="?view=positions&edit=<?php echo (int)$pos->getPositionId(); ?>" class="btn btn-outline-secondary btn-sm"><?php echo _("Edit"); ?></a></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="6" class="text-center text-muted"><?php echo _("No positions found."); ?></td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>

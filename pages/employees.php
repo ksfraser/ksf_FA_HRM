@@ -1,15 +1,32 @@
 <?php
 $path_to_root = "../..";
-include_once($path_to_root . "/modules/ksf_FA_HRM/includes/employee_db.inc");
+$page_security = 'SA_HRM_EMPLOYEES';
+include_once($path_to_root . "/includes/session.inc");
+add_access_extensions();
+
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Employee.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/EmployeeRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/GradeRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/LookupRepository.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Exception/EmployeeNotFoundException.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Exception/ValidationException.php");
+require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/EmployeeService.php");
+
+use ksfraser\FrontAccounting\HRM\Service\EmployeeService;
+
+$service = new EmployeeService();
 
 if (isset($_POST['save_employee'])) {
-    insert_employee($_POST);
+    $service->hire($_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=employees');
     exit;
 }
 
 if (isset($_POST['update_employee'])) {
-    update_employee($_POST);
+    $service->updateEmployee((int)$_POST['employment_id'], $_POST);
     header('Location: ' . $_SERVER['PHP_SELF'] . '?view=employees');
     exit;
 }
@@ -18,16 +35,12 @@ $show_form = isset($_GET['add']);
 $edit_mode = isset($_GET['edit']);
 $edit_row = null;
 if ($edit_mode) {
-    $edit_id = (int)$_GET['edit'];
-    $edit_row = get_employee($edit_id);
+    $edit_row = $service->getById((int)$_GET['edit']);
     $show_form = true;
 }
 
-$departments = get_departments();
-$positions = get_positions_list();
-$grades = get_grades_list();
-$employees = get_employees();
-$employment_statuses = get_employment_statuses();
+$dropdowns = $service->getFormDropdowns();
+$employees = $service->listAll();
 ?>
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -60,16 +73,12 @@ $employment_statuses = get_employment_statuses();
                             <label for="person_id"><?php echo _("Contact (CRM Person)"); ?></label>
                             <select class="form-control" id="person_id" name="person_id" required>
                                 <option value=""><?php echo _("-- Select Contact --"); ?></option>
-                            <?php
-                            $persons_sql = "SELECT id, name FROM " . TB_PREF . "crm_persons ORDER BY name";
-                            $persons = db_query($persons_sql);
-                            if ($persons) {
-                                while ($p = db_fetch_assoc($persons)) {
-                                    $sel = (isset($edit_row['person_id']) && $edit_row['person_id'] == $p['id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$p['id'] . '" ' . $sel . '>' . htmlspecialchars($p['name']) . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($dropdowns['persons'] as $p): ?>
+                                <option value="<?php echo (int)$p['id']; ?>"
+                                    <?php echo (isset($edit_row['person_id']) && $edit_row['person_id'] == $p['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($p['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -78,14 +87,12 @@ $employment_statuses = get_employment_statuses();
                             <label for="department_id"><?php echo _("Department"); ?></label>
                             <select class="form-control" id="department_id" name="department_id">
                                 <option value=""><?php echo _("-- None --"); ?></option>
-                            <?php
-                            if ($departments) {
-                                while ($d = db_fetch_assoc($departments)) {
-                                    $sel = (isset($edit_row['department_id']) && $edit_row['department_id'] == $d['department_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$d['department_id'] . '" ' . $sel . '>' . htmlspecialchars($d['department_name']) . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($dropdowns['departments'] as $d): ?>
+                                <option value="<?php echo (int)$d->getDepartmentId(); ?>"
+                                    <?php echo (isset($edit_row['department_id']) && $edit_row['department_id'] == $d->getDepartmentId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($d->getDepartmentName()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -94,14 +101,12 @@ $employment_statuses = get_employment_statuses();
                             <label for="position_id"><?php echo _("Position"); ?></label>
                             <select class="form-control" id="position_id" name="position_id">
                                 <option value=""><?php echo _("-- None --"); ?></option>
-                            <?php
-                            if ($positions) {
-                                while ($p = db_fetch_assoc($positions)) {
-                                    $sel = (isset($edit_row['position_id']) && $edit_row['position_id'] == $p['position_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$p['position_id'] . '" ' . $sel . '>' . htmlspecialchars($p['position_name']) . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($dropdowns['positions'] as $p): ?>
+                                <option value="<?php echo (int)$p->getPositionId(); ?>"
+                                    <?php echo (isset($edit_row['position_id']) && $edit_row['position_id'] == $p->getPositionId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($p->getPositionCode()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -112,14 +117,12 @@ $employment_statuses = get_employment_statuses();
                             <label for="grade_id"><?php echo _("Grade"); ?></label>
                             <select class="form-control" id="grade_id" name="grade_id">
                                 <option value=""><?php echo _("-- None --"); ?></option>
-                            <?php
-                            if ($grades) {
-                                while ($g = db_fetch_assoc($grades)) {
-                                    $sel = (isset($edit_row['grade_id']) && $edit_row['grade_id'] == $g['grade_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$g['grade_id'] . '" ' . $sel . '>' . htmlspecialchars($g['grade_name']) . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($dropdowns['grades'] as $g): ?>
+                                <option value="<?php echo (int)$g->getGradeId(); ?>"
+                                    <?php echo (isset($edit_row['grade_id']) && $edit_row['grade_id'] == $g->getGradeId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($g->getGradeName()); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -128,14 +131,12 @@ $employment_statuses = get_employment_statuses();
                             <label for="reports_to_person_id"><?php echo _("Reports To"); ?></label>
                             <select class="form-control" id="reports_to_person_id" name="reports_to_person_id">
                                 <option value=""><?php echo _("-- None --"); ?></option>
-                            <?php
-                            if ($employees) {
-                                while ($e = db_fetch_assoc($employees)) {
-                                    $sel = (isset($edit_row['reports_to_person_id']) && $edit_row['reports_to_person_id'] == $e['person_id']) ? 'selected' : '';
-                                    echo '<option value="' . (int)$e['person_id'] . '" ' . $sel . '>' . htmlspecialchars($e['employee_code'] . ' - ' . ($e['person_name'] ?? '')) . '</option>';
-                                }
-                            }
-                            ?>
+                            <?php foreach ($dropdowns['employees'] as $e): ?>
+                                <option value="<?php echo (int)$e->getPersonId(); ?>"
+                                    <?php echo (isset($edit_row['reports_to_person_id']) && $edit_row['reports_to_person_id'] == $e->getPersonId()) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($e->getEmployeeCode() . ' - ' . ($e->toArray()['person_name'] ?? '')); ?>
+                                </option>
+                            <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -184,26 +185,27 @@ $employment_statuses = get_employment_statuses();
                 </tr>
             </thead>
             <tbody>
-            <?php
-            if ($employees && db_num_rows($employees)) {
-                while ($row = db_fetch_assoc($employees)) {
-                    $badge = $row['is_active']
-                        ? '<span class="badge badge-success">' . _("Active") . '</span>'
-                        : '<span class="badge badge-secondary">' . _("Inactive") . '</span>';
-                    echo '<tr>';
-                    echo '<td>' . html_entity_decode($row['employee_code'] ?? '') . '</td>';
-                    echo '<td>' . html_entity_decode($row['person_name'] ?? '') . '</td>';
-                    echo '<td>' . html_entity_decode($row['department_name'] ?? '') . '</td>';
-                    echo '<td>' . html_entity_decode($row['position_name'] ?? '') . '</td>';
-                    echo '<td>' . ($row['hire_date'] ?? '') . '</td>';
-                    echo '<td class="text-center">' . $badge . '</td>';
-                    echo '<td class="text-right"><a href="?view=employees&edit=' . (int)$row['employment_id'] . '" class="btn btn-outline-secondary btn-sm">' . _("Edit") . '</a></td>';
-                    echo '</tr>';
-                }
-            } else {
-                echo '<tr><td colspan="7" class="text-center text-muted">' . _("No employees found.") . '</td></tr>';
-            }
-            ?>
+            <?php if (!empty($employees)): ?>
+                <?php foreach ($employees as $row): ?>
+                    <tr>
+                        <td><?php echo html_entity_decode($row->getEmployeeCode() ?? ''); ?></td>
+                        <td><?php echo html_entity_decode($row->toArray()['person_name'] ?? ''); ?></td>
+                        <td><?php echo html_entity_decode($row->toArray()['department_name'] ?? ''); ?></td>
+                        <td><?php echo html_entity_decode($row->toArray()['position_code'] ?? ''); ?></td>
+                        <td><?php echo $row->getHireDate() ?? ''; ?></td>
+                        <td class="text-center">
+                            <?php if ($row->isActive()): ?>
+                                <span class="badge badge-success"><?php echo _("Active"); ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo _("Inactive"); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><a href="?view=employees&edit=<?php echo (int)$row->getEmploymentId(); ?>" class="btn btn-outline-secondary btn-sm"><?php echo _("Edit"); ?></a></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="7" class="text-center text-muted"><?php echo _("No employees found."); ?></td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>
