@@ -1,6 +1,6 @@
 <?php
-$path_to_root = "../..";
-$page_security = 'SA_HRM_REPORTS';
+$path_to_root = "../../..";
+$page_security = 'SA_ksf_FA_HRMVIEW';
 include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 ?>

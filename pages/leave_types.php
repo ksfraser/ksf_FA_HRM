@@ -1,6 +1,6 @@
 <?php
-$path_to_root = "../..";
-$page_security = 'SA_HRM_LEAVE_TYPES';
+$path_to_root = "../../..";
+$page_security = 'SA_HRM_LEAVE';
 include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 

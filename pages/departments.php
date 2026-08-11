@@ -1,6 +1,6 @@
 <?php
-$path_to_root = "../..";
-$page_security = 'SA_HRM_DEPARTMENTS';
+$path_to_root = "../../..";
+$page_security = 'SA_HRM_DEPARTMENT';
 include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
