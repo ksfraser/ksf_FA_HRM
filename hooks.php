@@ -14,10 +14,16 @@ if (file_exists($famodulemenuPath)) {
     require_once $famodulemenuPath;
 }
 
+// Load traits for workflow hooks and CRUD operations
+use ksfraser\FrontAccounting\Common\Traits\WorkflowHooksTrait;
+use ksfraser\FrontAccounting\Common\Traits\CrudOperationsTrait;
+
 define('SS_ksf_FA_HRM', 117 << 8);
 
 class hooks_ksf_FA_HRM extends hooks
 {
+    use WorkflowHooksTrait;
+    use CrudOperationsTrait;
     var $module_name = 'ksf_FA_HRM';
     var $version = '1.0.0';
 
@@ -71,6 +77,27 @@ class hooks_ksf_FA_HRM extends hooks
         );
 
         return $this->update_databases($company, $updates, $check_only);
+    }
+
+    function init()
+    {
+        $this->registerWorkflowType('employee', 'hrm_employee');
+        $this->registerWorkflowType('position', 'hrm_position');
+        $this->registerWorkflowType('department', 'hrm_department');
+        $this->registerWorkflowType('team', 'hrm_team');
+        $this->registerWorkflowType('grade', 'hrm_grade');
+        $this->registerWorkflowType('payroll', 'hrm_payroll');
+        $this->registerWorkflowType('benefit', 'hrm_benefit');
+    }
+
+    protected function createRecordInternal(string $recordType, array $data): array
+    {
+        return $data;
+    }
+
+    protected function deleteRecordInternal(string $recordType, array $data): array
+    {
+        return $data;
     }
 }
 

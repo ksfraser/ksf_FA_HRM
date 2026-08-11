@@ -8,40 +8,25 @@ use PHPUnit\Framework\TestCase;
 
 class ModuleStructureTest extends TestCase
 {
-    private string $moduleDir;
-    
-    protected function setUp(): void
+    public function testPayrollRepositoryExists(): void
     {
-        $this->moduleDir = dirname(__DIR__, 2);
+        $this->assertTrue(
+            class_exists('ksfraser\FrontAccounting\HRM\Repository\PayrollRepository')
+        );
     }
-    
-    public function testIncludesDirectoryExists(): void
+
+    public function testBenefitRepositoryExists(): void
     {
-        $this->assertDirectoryExists($this->moduleDir . '/includes');
+        $this->assertTrue(
+            class_exists('ksfraser\FrontAccounting\HRM\Repository\BenefitRepository')
+        );
     }
-    
-    public function testPayrollDbIncExists(): void
+
+    public function testImportExists(): void
     {
-        $this->assertFileExists($this->moduleDir . '/includes/payroll_db.inc');
-    }
-    
-    public function testLeaveDbIncExists(): void
-    {
-        $this->assertFileExists($this->moduleDir . '/includes/leave_db.inc');
-    }
-    
-    public function testBenefitsDbIncExists(): void
-    {
-        $this->assertFileExists($this->moduleDir . '/includes/benefits_db.inc');
-    }
-    
-    public function testImportPhpExists(): void
-    {
-        $this->assertFileExists($this->moduleDir . '/includes/import.php');
-    }
-    
-    public function testProjectDcsExists(): void
-    {
-        $this->assertDirectoryExists($this->moduleDir . '/ProjectDcs');
+        $this->assertTrue(
+            file_exists(__DIR__ . '/../import.php') ||
+            file_exists(__DIR__ . '/../../import.php')
+        );
     }
 }

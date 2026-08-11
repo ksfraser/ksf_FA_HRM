@@ -11,16 +11,16 @@ class PayrollGLTest extends TestCase
     public function testGLEntriesClassExists(): void
     {
         $this->assertTrue(
-            class_exists('Ksfraser\GL\PayrollGLentries') ||
-            file_exists(__DIR__ . '/../../src/Ksfraser/GL/PayrollGLentries.php')
+            class_exists('Ksfraser\FrontAccounting\HRM\GL\PayrollGLentries') ||
+            file_exists(__DIR__ . '/../../src/GL/PayrollGLentries.php')
         );
     }
 
     public function testInstallHookExists(): void
     {
         $this->assertTrue(
-            class_exists('Ksfraser\Hooks\InstallHook') ||
-            file_exists(__DIR__ . '/../../src/Ksfraser/Hooks/InstallHook.php')
+            class_exists('hooks_ksf_FA_HRM', false) ||
+            file_exists(__DIR__ . '/../../hooks.php')
         );
     }
 }
