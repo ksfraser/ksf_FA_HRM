@@ -19,6 +19,8 @@ use ksfraser\FrontAccounting\Common\Traits\WorkflowHooksTrait;
 use ksfraser\FrontAccounting\Common\Traits\CrudOperationsTrait;
 
 define('SS_ksf_FA_HRM', 117 << 8);
+define('KSF_HRM_MODULE_NAME', 'ksf_FA_HRM');
+define('KSF_HRM_CAPABILITIES', 'employee,department,position,grade,payroll,benefit,leave,recruitment,commission');
 
 class hooks_ksf_FA_HRM extends hooks
 {
@@ -98,6 +100,117 @@ class hooks_ksf_FA_HRM extends hooks
     protected function deleteRecordInternal(string $recordType, array $data): array
     {
         return $data;
+    }
+
+    /**
+     * Return module constants for inter-module capability discovery.
+     *
+     * @param array $data Result bucket (by reference)
+     * @param array|null $opts Options
+     * @return array Module constants
+     */
+    public function getModuleConstants(&$data, $opts = null)
+    {
+        $constants = array(
+            'KSF_HRM_MODULE_NAME' => KSF_HRM_MODULE_NAME,
+            'KSF_HRM_CAPABILITIES' => KSF_HRM_CAPABILITIES,
+        );
+        $data['constants'] = $constants;
+        return $constants;
+    }
+
+    /**
+     * Return module capabilities with descriptions.
+     *
+     * @param array $data Result bucket (by reference)
+     * @param array|null $opts Options
+     * @return array Capabilities keyed by capability name
+     */
+    public function getModuleCapabilities(&$data, $opts = null)
+    {
+        $capabilities = array(
+            'commission' => array(
+                'description' => 'Sales commission calculation on imported orders',
+                'methods' => array('computeCommission', 'onOrderImported'),
+                'events' => array('ORDER_IMPORTED'),
+            ),
+        );
+        $data['capabilities'] = $capabilities;
+        return $capabilities;
+    }
+
+    /**
+     * Check whether the module provides a capability.
+     *
+     * @param array $data Result bucket (by reference)
+     * @param array|null $opts Options (capability)
+     * @return bool Capability availability
+     */
+    public function hasCapability(&$data, $opts = null)
+    {
+        $capability = isset($opts['capability']) ? $opts['capability'] : (isset($data['capability']) ? $data['capability'] : null);
+        if ($capability === null) {
+            $data['has_capability'] = false;
+            $data['error'] = 'No capability specified';
+            return false;
+        }
+        $capabilities = explode(',', KSF_HRM_CAPABILITIES);
+        $hasCapability = in_array($capability, $capabilities);
+        $data['has_capability'] = $hasCapability;
+        $data['capability_checked'] = $capability;
+        return $hasCapability;
+    }
+
+    /**
+     * Respond to a capability request.
+     *
+     * Supports 'capabilities', 'constants', and 'has:<capability>'.
+     *
+     * @param array $data Result bucket (by reference)
+     * @param array|null $opts Options (request)
+     * @return mixed Result of the requested operation or null
+     */
+    public function respondToCapabilityRequest(&$data, $opts = null)
+    {
+        $request = isset($opts['request']) ? $opts['request'] : (isset($data['request']) ? $data['request'] : 'capabilities');
+        $data['request'] = $request;
+        $data['module'] = $this->module_name;
+
+        if (strpos($request, 'has:') === 0) {
+            $capability = substr($request, 4);
+            return $this->hasCapability($data, array('capability' => $capability));
+        }
+
+        switch ($request) {
+            case 'capabilities':
+                return $this->getModuleCapabilities($data, $opts);
+            case 'constants':
+                return $this->getModuleConstants($data, $opts);
+            default:
+                $data['error'] = 'Unknown request type: ' . $request;
+                return null;
+        }
+    }
+
+    /**
+     * order_imported listener: create pending commission entries.
+     *
+     * Invoked by FA's hook_invoke_all('order_imported', $data) with the
+     * payload broadcast by source modules (Square, WooCommerce). The
+     * listener is a no-op when the HRM source tree is unavailable.
+     *
+     * @param array $data Event payload (by reference)
+     * @param array|null $opts Options
+     * @return void
+     */
+    public function order_imported(&$data, $opts = null)
+    {
+        if (!class_exists('ksfraser\FrontAccounting\HRM\Service\CommissionService')) {
+            return;
+        }
+        $service = new \ksfraser\FrontAccounting\HRM\Service\CommissionService();
+        $created = $service->onOrderImported($data);
+        $data['commissions_created'] = count($created);
     }
 }
 

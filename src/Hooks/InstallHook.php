@@ -20,6 +20,8 @@ namespace ksfraser\FrontAccounting\HRM\Hooks;
  * - Pay elements: 0_hrm_pay_elements, 0_hrm_salary_structure
  * - Separation: 0_hrm_separation_reasons
  * - Employment status: 0_hrm_employment_status
+ * - Commissions: 0_hrm_commission_rates, 0_hrm_commission_assignments,
+ *   0_hrm_commission_entries
  *
  * NOT owned by HRM (moved to ksf_FA_Leave):
  * - 0_leave_types, 0_leave_requests, 0_leave_balances, 0_leave_bank_config,
@@ -126,6 +128,9 @@ class InstallHook
             'hrm_payroll',
             'hrm_payroll_entries',
             'hrm_employment_status',
+            'hrm_commission_entries',
+            'hrm_commission_assignments',
+            'hrm_commission_rates',
         ];
 
         foreach ($tables as $table) {

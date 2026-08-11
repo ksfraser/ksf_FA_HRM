@@ -348,6 +348,60 @@ CREATE TABLE IF NOT EXISTS `0_hrm_employment_status` (
     UNIQUE KEY `idx_code` (`status_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Commission Rates (per-employee commission configuration)
+CREATE TABLE IF NOT EXISTS `0_hrm_commission_rates` (
+    `rate_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons (employee)',
+    `source` VARCHAR(32) DEFAULT 'all' COMMENT 'all | square | woocommerce | ...',
+    `rate_type` VARCHAR(20) DEFAULT 'percent' COMMENT 'percent | fixed',
+    `rate` DECIMAL(10,4) DEFAULT 0 COMMENT 'Percent value or fixed amount',
+    `effective_from` DATE NOT NULL,
+    `effective_to` DATE DEFAULT NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`rate_id`),
+    KEY `idx_person` (`person_id`),
+    KEY `idx_effective` (`effective_from`, `effective_to`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Commission Assignments (employee to customer mapping)
+CREATE TABLE IF NOT EXISTS `0_hrm_commission_assignments` (
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons (employee)',
+    `customer_id` INT(11) NOT NULL COMMENT 'FK to debtors_master.debtor_no',
+    `source` VARCHAR(32) DEFAULT 'all' COMMENT 'all | square | woocommerce | ...',
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_employee_customer` (`person_id`, `customer_id`, `source`),
+    KEY `idx_customer` (`customer_id`),
+    KEY `idx_person` (`person_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Commission Entries (generated per imported order)
+CREATE TABLE IF NOT EXISTS `0_hrm_commission_entries` (
+    `entry_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `person_id` INT(11) NOT NULL COMMENT 'FK to 0_crm_persons (employee)',
+    `fa_order_no` INT(11) NOT NULL COMMENT 'FA sales order / invoice number',
+    `fa_trans_type` INT(11) NOT NULL DEFAULT 10 COMMENT 'ST_SALESINVOICE = 10',
+    `source` VARCHAR(32) DEFAULT 'all' COMMENT 'all | square | woocommerce | ...',
+    `source_order_id` VARCHAR(64) DEFAULT NULL,
+    `customer_id` INT(11) DEFAULT NULL COMMENT 'FK to debtors_master.debtor_no',
+    `order_total` DECIMAL(15,2) DEFAULT 0,
+    `commission_amount` DECIMAL(15,2) DEFAULT 0,
+    `rate` DECIMAL(10,4) DEFAULT 0,
+    `status` VARCHAR(20) DEFAULT 'pending' COMMENT 'pending | approved | paid | void',
+    `order_date` DATE DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`entry_id`),
+    UNIQUE KEY `idx_order_person` (`fa_order_no`, `fa_trans_type`, `person_id`),
+    KEY `idx_person` (`person_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_customer` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Role Dictionary seed data
 INSERT IGNORE INTO `0_hrm_role_dictionary` (role_dict_id, role_name, description) VALUES
 (1, 'Manager', 'Team or department manager'),
