@@ -64,6 +64,12 @@ class hooks_ksf_FA_HRM extends hooks
         $security_areas['SA_HRM_RECRUITMENT'] = array(
             SS_ksf_FA_HRM | 8, _("Recruitment")
         );
+        $security_areas['SA_HRM_TEAMS'] = array(
+            SS_ksf_FA_HRM | 9, _("Teams")
+        );
+        $security_areas['SA_HRM_ROLES'] = array(
+            SS_ksf_FA_HRM | 10, _("Roles")
+        );
 
         return array($security_areas, $security_sections);
     }
@@ -230,7 +236,9 @@ class hrm_app extends application
 
         $menu->addItem('employees',    _("&Employees"),       MENU_INQUIRY)
              ->addItem('departments',  _("Departments"),      MENU_INQUIRY)
+             ->addItem('teams',        _("Teams"),            MENU_INQUIRY)
              ->addItem('positions',    _("Positions"),        MENU_SETTINGS)
+             ->addItem('roles',        _("Roles"),            MENU_SETTINGS)
              ->addItem('grades',       _("Grades"),           MENU_SETTINGS)
              ->addItem('payroll',      _("Payroll"),          MENU_ENTRY)
              ->addItem('benefits',     _("Benefits"),         MENU_ENTRY)

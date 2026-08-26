@@ -34,6 +34,16 @@ class RoleRepository
         return array_map(fn($r) => new Role($r), $this->dbFetchAll($this->dbQuery($sql)));
     }
 
+    public function findAll(): array
+    {
+        $sql = "SELECT r.*, rd.role_name AS dict_name, d.department_code
+            FROM " . TB_PREF . "hrm_roles r
+            LEFT JOIN " . TB_PREF . "hrm_role_dictionary rd ON r.role_dict_id = rd.role_dict_id
+            LEFT JOIN " . TB_PREF . "hrm_departments d ON r.department_id = d.department_id
+            ORDER BY d.department_code, r.role_name";
+        return array_map(fn($r) => new Role($r), $this->dbFetchAll($this->dbQuery($sql)));
+    }
+
     public function save(array $data): int
     {
         $sql = "INSERT INTO " . TB_PREF . "hrm_roles
@@ -46,5 +56,32 @@ class RoleRepository
             (isset($data['is_active']) ? 1 : 0) . ")";
         $this->dbQuery($sql);
         return $this->dbInsertId();
+    }
+
+    public function update(int $id, array $data): void
+    {
+        $sets = [];
+        if (array_key_exists('role_dict_id', $data)) {
+            $dictId = (int)$data['role_dict_id'];
+            $sets[] = "`role_dict_id` = " . ($dictId > 0 ? $dictId : 'NULL');
+        }
+        foreach (['role_name', 'description'] as $field) {
+            if (isset($data[$field])) {
+                $sets[] = "`$field` = " . $this->escape($data[$field]);
+            }
+        }
+        if (isset($data['is_active'])) {
+            $sets[] = "`is_active` = " . ($data['is_active'] ? 1 : 0);
+        }
+        if (empty($sets)) return;
+        $sql = "UPDATE " . TB_PREF . "hrm_roles SET " . implode(', ', $sets) .
+            " WHERE role_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
+
+    public function delete(int $id): void
+    {
+        $sql = "DELETE FROM " . TB_PREF . "hrm_roles WHERE role_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
     }
 }
