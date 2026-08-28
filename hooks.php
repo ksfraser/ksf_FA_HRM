@@ -108,6 +108,287 @@ class hooks_ksf_FA_HRM extends hooks
         return $data;
     }
 
+    // ─── Department UI Hooks ────────────────────────────────────────
+
+    /**
+     * Provide active department entities to requesting modules.
+     *
+     * Consumer: hook_invoke('ksf_FA_HRM', 'getDepartments', $data)
+     * $data['active_only'] = true (bool, optional)
+     *
+     * @see BR-006 (Cross-Module DDL Caching)
+     * @see FR-006-005 (Hook Contract)
+     *
+     * @param array $data Hook payload (by reference)
+     * @param array|null $opts Options
+     * @return array Department entity arrays (serialized from Department objects)
+     */
+    function getDepartments(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+
+        $service = new \ksfraser\FrontAccounting\HRM\Service\DepartmentService();
+        return $service->hookGetDepartments($data, $opts);
+    }
+
+    /**
+     * Provide pre-rendered department DDL <option> strings to requesting modules.
+     *
+     * Consumer: hook_invoke('ksf_FA_HRM', 'getDepartmentDDL', $data)
+     * $data['active_only'] = true   (bool, optional)
+     * $data['blank_label'] = ''     (string, optional)
+     * $data['format']      = '{code} - {name}' (string, optional)
+     * $data['selected_id'] = 0      (int, optional)
+     *
+     * @see BR-006 (Cross-Module DDL Caching)
+     * @see FR-006-005 (Hook Contract)
+     * @see FR-006-006 (Blank Option & Mandatory Validation)
+     *
+     * @param array $data Hook payload (by reference)
+     * @param array|null $opts Options
+     * @return array Pre-rendered <option> HTML strings
+     */
+    function getDepartmentDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+
+        $service = new \ksfraser\FrontAccounting\HRM\Service\DepartmentService();
+        return $service->hookGetDepartmentDDL($data, $opts);
+    }
+
+    /**
+     * Provide serializable HtmlOption objects for department DDL.
+     *
+     * Consumer: hook_invoke('ksf_FA_HRM', 'getDepartmentHtmlOptions', $data)
+     * Returns HtmlOption[] that can be serialized, cached, and manipulated
+     * before rendering. Consumer calls ->getHtml() on each option.
+     *
+     * @see BR-006 (Cross-Module DDL Caching)
+     * @see FR-006-005 (Hook Contract)
+     *
+     * @param array $data Hook payload (by reference)
+     * @param array|null $opts Options
+     * @return \Ksfraser\HTML\Elements\HtmlOption[] Serializable option objects
+     */
+    function getDepartmentHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+
+        $service = new \ksfraser\FrontAccounting\HRM\Service\DepartmentService();
+        return $service->hookGetHtmlOptions($data, $opts);
+    }
+
+    // ─── Team Hooks ────────────────────────────────────────────────
+
+    function getTeams(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\TeamService();
+        return $service->hookGetTeams($data, $opts);
+    }
+
+    function getTeamDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\TeamService();
+        return $service->hookGetTeamDDL($data, $opts);
+    }
+
+    function getTeamHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\TeamService();
+        return $service->hookGetTeamHtmlOptions($data, $opts);
+    }
+
+    // ─── Role Hooks ────────────────────────────────────────────────
+
+    function getRoles(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleService();
+        return $service->hookGetRoles($data, $opts);
+    }
+
+    function getRoleDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleService();
+        return $service->hookGetRoleDDL($data, $opts);
+    }
+
+    function getRoleHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleService();
+        return $service->hookGetRoleHtmlOptions($data, $opts);
+    }
+
+    // ─── Role Dictionary Hooks ─────────────────────────────────────
+
+    function getRoleDictionary(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleDictionaryService();
+        return $service->hookGetRoleDictionary($data, $opts);
+    }
+
+    function getRoleDictionaryDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleDictionaryService();
+        return $service->hookGetRoleDictionaryDDL($data, $opts);
+    }
+
+    function getRoleDictionaryHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\RoleDictionaryService();
+        return $service->hookGetRoleDictionaryHtmlOptions($data, $opts);
+    }
+
+    // ─── Grade Hooks ───────────────────────────────────────────────
+
+    function getGrades(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\GradeService();
+        return $service->hookGetGrades($data, $opts);
+    }
+
+    function getGradeDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\GradeService();
+        return $service->hookGetGradeDDL($data, $opts);
+    }
+
+    function getGradeHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\GradeService();
+        return $service->hookGetGradeHtmlOptions($data, $opts);
+    }
+
+    // ─── Position Hooks ────────────────────────────────────────────
+
+    function getPositions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\PositionService();
+        return $service->hookGetPositions($data, $opts);
+    }
+
+    function getPositionDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\PositionService();
+        return $service->hookGetPositionDDL($data, $opts);
+    }
+
+    function getPositionHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\PositionService();
+        return $service->hookGetPositionHtmlOptions($data, $opts);
+    }
+
+    // ─── Employment Status Hooks ───────────────────────────────────
+
+    function getEmploymentStatuses(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\EmploymentStatusService();
+        return $service->hookGetEmploymentStatuses($data, $opts);
+    }
+
+    function getEmploymentStatusDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\EmploymentStatusService();
+        return $service->hookGetEmploymentStatusDDL($data, $opts);
+    }
+
+    function getEmploymentStatusHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\EmploymentStatusService();
+        return $service->hookGetEmploymentStatusHtmlOptions($data, $opts);
+    }
+
+    // ─── Benefits Hooks ────────────────────────────────────────────
+
+    function getBenefits(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\BenefitsService();
+        return $service->hookGetBenefits($data, $opts);
+    }
+
+    function getBenefitDDL(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\BenefitsService();
+        return $service->hookGetBenefitDDL($data, $opts);
+    }
+
+    function getBenefitHtmlOptions(&$data, $opts = null)
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (!file_exists($autoload)) { return []; }
+        require_once $autoload;
+        $service = new \ksfraser\FrontAccounting\HRM\Service\BenefitsService();
+        return $service->hookGetBenefitHtmlOptions($data, $opts);
+    }
+
+    // ─── Inter-Module Capabilities ─────────────────────────────────
+
     /**
      * Return module constants for inter-module capability discovery.
      *

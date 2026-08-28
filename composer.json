@@ -2,8 +2,18 @@
     "name": "ksfraser/ksf_fa_hrm",
     "description": "HRM Module for FrontAccounting - Employee management, org hierarchy, payroll, benefits",
     "type": "frontaccounting-module",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../ksfraser/html",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
-        "php": ">=7.3"
+        "php": ">=7.3",
+        "ksfraser/html": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ksfraser\FrontAccounting\HRM\Service;
 
 use ksfraser\FrontAccounting\HRM\Repository\EmployeeRepository;
-use ksfraser\FrontAccounting\HRM\Repository\DepartmentRepository;
 use ksfraser\FrontAccounting\HRM\Repository\PositionRepository;
 use ksfraser\FrontAccounting\HRM\Repository\GradeRepository;
 use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
@@ -15,7 +14,6 @@ use ksfraser\FrontAccounting\HRM\Exception\EmployeeNotFoundException;
 class EmployeeService
 {
     private EmployeeRepository $employeeRepo;
-    private DepartmentRepository $deptRepo;
     private PositionRepository $positionRepo;
     private GradeRepository $gradeRepo;
     private LookupRepository $lookupRepo;
@@ -23,7 +21,6 @@ class EmployeeService
     public function __construct()
     {
         $this->employeeRepo = new EmployeeRepository();
-        $this->deptRepo = new DepartmentRepository();
         $this->positionRepo = new PositionRepository();
         $this->gradeRepo = new GradeRepository();
         $this->lookupRepo = new LookupRepository();
@@ -51,7 +48,6 @@ class EmployeeService
     public function getFormDropdowns(): array
     {
         return [
-            'departments' => $this->deptRepo->findActive(),
             'positions' => $this->positionRepo->findActive(),
             'grades' => $this->gradeRepo->findActive(),
             'employees' => $this->employeeRepo->findActive(),

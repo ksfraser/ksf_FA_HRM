@@ -36,9 +36,11 @@ if ($edit_mode) {
     $show_form = true;
 }
 
-$dropdowns = $service->getFormDropdowns();
-$departments = $dropdowns['departments'];
-$dictionary = $dropdowns['dictionary'];
+// Department DDL via hook — HRM owns this UI component
+$deptData = ['active_only' => true, 'blank_label' => _("-- Select Department --")];
+$departmentOptions = hook_invoke('ksf_FA_HRM', 'getDepartmentDDL', $deptData);
+
+$dictionary = $service->getFormDropdowns()['dictionary'];
 
 $selected_dept = 0;
 if ($show_form) {
@@ -68,14 +70,19 @@ $roles = $service->listAll();
                     <div class="col-md-3">
                         <div class="form-group">
                             <label><?php echo _("Department"); ?></label>
-                            <select class="form-control" name="department_id" required>
-                                <option value=""><?php echo _("-- Select Department --"); ?></option>
-                            <?php foreach ($departments as $d): ?>
-                                <option value="<?php echo (int)$d->getDepartmentId(); ?>"
-                                    <?php echo ($selected_dept == $d->getDepartmentId()) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($d->getDepartmentCode() . ' - ' . $d->getDepartmentName()); ?>
-                                </option>
-                            <?php endforeach; ?>
+                            <select class="form-control" name="department_id" data-required="1">
+                            <?php
+                            foreach ($departmentOptions as $optHtml) {
+                                if ($selected_dept > 0) {
+                                    $optHtml = str_replace(
+                                        'value="' . (int)$selected_dept . '"',
+                                        'value="' . (int)$selected_dept . '" selected',
+                                        $optHtml
+                                    );
+                                }
+                                echo $optHtml;
+                            }
+                            ?>
                             </select>
                         </div>
                     </div>
@@ -169,6 +176,12 @@ document.getElementById('toggle-add').addEventListener('click', function(e) {
     } else {
         window.location.href = '?view=roles&add=1';
     }
+});
+
+document.querySelectorAll('select[data-required]').forEach(function(el) {
+    el.form.addEventListener('submit', function(e) {
+        if (el.value === '') { e.preventDefault(); el.focus(); }
+    });
 });
 
 var dictSelect = document.getElementById('dict_select');

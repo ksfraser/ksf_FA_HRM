@@ -4,72 +4,52 @@ declare(strict_types=1);
 
 namespace ksfraser\FrontAccounting\HRM\Service;
 
-use ksfraser\FrontAccounting\HRM\Repository\TeamRepository;
-use ksfraser\FrontAccounting\HRM\Entity\Team;
+use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
+use ksfraser\FrontAccounting\HRM\Entity\EmploymentStatus;
 use Ksfraser\HTML\Elements\HtmlOption;
 use Ksfraser\HTML\Elements\HtmlSelect;
 use Ksfraser\HTML\Traits\DdlCacheTrait;
 
 /**
- * TeamService — DDL caching + hooks for team reference data.
+ * EmploymentStatusService — DDL caching + hooks for employment status reference data.
  *
  * @see BR-006 (Cross-Module DDL Caching)
- * @see FR-006-001 (Three-Layer Cache Architecture)
  *
  * @since 1.0.0
  */
-class TeamService
+class EmploymentStatusService
 {
     use DdlCacheTrait;
 
-    private TeamRepository $repo;
+    private LookupRepository $repo;
 
-    /** @var array[]|null Entity cache */
+    /** @var EmploymentStatus[][]|null Entity cache */
     private static ?array $entityCache = null;
 
-    public function __construct(?TeamRepository $repo = null)
+    public function __construct(?LookupRepository $repo = null)
     {
-        $this->repo = $repo ?? new TeamRepository();
+        $this->repo = $repo ?? new LookupRepository();
     }
 
     // ─── Entity Access ─────────────────────────────────────────────
 
-    /**
-     * Get teams (cached).
-     *
-     * @param bool $activeOnly
-     * @return Team[]
-     */
     public function getEntities(bool $activeOnly = true): array
     {
         $key = $activeOnly ? 'active' : 'all';
         if (self::$entityCache !== null && isset(self::$entityCache[$key])) {
             return self::$entityCache[$key];
         }
-        $entities = $activeOnly ? $this->repo->findActiveByDepartment(0) : $this->repo->findAll();
-        self::$entityCache[$key] = $entities;
-        return $entities;
+        $all = $this->repo->getEmploymentStatuses();
+        if ($activeOnly) {
+            $all = array_filter($all, fn($e) => $e->isActive());
+        }
+        self::$entityCache[$key] = array_values($all);
+        return self::$entityCache[$key];
     }
 
     public function listAll(): array
     {
-        return $this->repo->findAll();
-    }
-
-    public function getById(int $id): ?array
-    {
-        $entity = $this->repo->findById($id);
-        return $entity ? $entity->toArray() : null;
-    }
-
-    public function getParentTeams(int $departmentId): array
-    {
-        return $this->repo->findByDepartment($departmentId);
-    }
-
-    public function getTeamsForDepartment(int $departmentId): array
-    {
-        return $this->repo->findActiveByDepartment($departmentId);
+        return $this->repo->getEmploymentStatuses();
     }
 
     // ─── DDL (via DdlCacheTrait) ───────────────────────────────────
@@ -91,10 +71,10 @@ class TeamService
             foreach ($entities as $entity) {
                 $text = str_replace(
                     ['{code}', '{name}', '{id}'],
-                    [$entity->getTeamCode(), $entity->getTeamName(), (string)$entity->getTeamId()],
+                    [$entity->getStatusCode(), $entity->getStatusName(), (string)$entity->getStatusId()],
                     $formatString
                 );
-                $opts[] = new HtmlOption((string)$entity->getTeamId(), $text);
+                $opts[] = new HtmlOption((string)$entity->getStatusId(), $text);
             }
             return $opts;
         });
@@ -126,8 +106,8 @@ class TeamService
         return $this->getOrRenderHtml($htmlKey, $options, $selectedId);
     }
 
-    public function getTeamSelect(
-        string $name = 'team_id',
+    public function getStatusSelect(
+        string $name = 'status_id',
         bool $activeOnly = true,
         string $blankLabel = '',
         string $formatString = '{code} - {name}',
@@ -142,27 +122,6 @@ class TeamService
         return $select;
     }
 
-    // ─── CRUD (invalidates cache) ──────────────────────────────────
-
-    public function create(array $data): int
-    {
-        $id = $this->repo->save($data);
-        self::invalidateAllCaches();
-        return $id;
-    }
-
-    public function update(int $id, array $data): void
-    {
-        $this->repo->update($id, $data);
-        self::invalidateAllCaches();
-    }
-
-    public function delete(int $id): void
-    {
-        $this->repo->delete($id);
-        self::invalidateAllCaches();
-    }
-
     public static function invalidateAllCaches(): void
     {
         self::$entityCache = null;
@@ -171,10 +130,9 @@ class TeamService
 
     // ─── Hook Response Methods ─────────────────────────────────────
 
-    public function hookGetTeams(array &$data, $opts = null): array
+    public function hookGetEmploymentStatuses(array &$data, $opts = null): array
     {
-        $activeOnly = $data['active_only'] ?? true;
-        $entities = $this->getEntities($activeOnly);
+        $entities = $this->getEntities($data['active_only'] ?? true);
         $result = [];
         foreach ($entities as $entity) {
             $result[] = $entity->toArray();
@@ -182,7 +140,7 @@ class TeamService
         return $result;
     }
 
-    public function hookGetTeamDDL(array &$data, $opts = null): array
+    public function hookGetEmploymentStatusDDL(array &$data, $opts = null): array
     {
         return $this->getDdl(
             $data['active_only'] ?? true,
@@ -192,7 +150,7 @@ class TeamService
         );
     }
 
-    public function hookGetTeamHtmlOptions(array &$data, $opts = null): array
+    public function hookGetEmploymentStatusHtmlOptions(array &$data, $opts = null): array
     {
         return $this->getHtmlOptions(
             $data['active_only'] ?? true,

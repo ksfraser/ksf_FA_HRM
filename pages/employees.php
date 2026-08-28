@@ -7,7 +7,6 @@ add_access_extensions();
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Employee.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/EmployeeRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/GradeRepository.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/LookupRepository.php");
@@ -40,6 +39,11 @@ if ($edit_mode) {
 }
 
 $dropdowns = $service->getFormDropdowns();
+
+// Department DDL via hook — HRM owns this UI component
+$deptData = ['active_only' => true, 'blank_label' => _("-- None --")];
+$departmentOptions = hook_invoke('ksf_FA_HRM', 'getDepartmentDDL', $deptData);
+
 $employees = $service->listAll();
 ?>
 <div class="card mb-3">
@@ -86,13 +90,19 @@ $employees = $service->listAll();
                         <div class="form-group">
                             <label for="department_id"><?php echo _("Department"); ?></label>
                             <select class="form-control" id="department_id" name="department_id">
-                                <option value=""><?php echo _("-- None --"); ?></option>
-                            <?php foreach ($dropdowns['departments'] as $d): ?>
-                                <option value="<?php echo (int)$d->getDepartmentId(); ?>"
-                                    <?php echo (isset($edit_row['department_id']) && $edit_row['department_id'] == $d->getDepartmentId()) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($d->getDepartmentName()); ?>
-                                </option>
-                            <?php endforeach; ?>
+                            <?php
+                            $selected_dept_id = $edit_row['department_id'] ?? 0;
+                            foreach ($departmentOptions as $optHtml) {
+                                if ($selected_dept_id > 0) {
+                                    $optHtml = str_replace(
+                                        'value="' . (int)$selected_dept_id . '"',
+                                        'value="' . (int)$selected_dept_id . '" selected',
+                                        $optHtml
+                                    );
+                                }
+                                echo $optHtml;
+                            }
+                            ?>
                             </select>
                         </div>
                     </div>
