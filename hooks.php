@@ -81,10 +81,56 @@ class hooks_ksf_FA_HRM extends hooks
         }
 
         $updates = array(
-            'install.sql' => array('fa_departments'),
+            'install.sql'             => array('fa_departments'),
+            'retag_contact_types.sql' => array('ksf_contact_types'),
         );
 
-        return $this->update_databases($company, $updates, $check_only);
+        $ok = $this->update_databases($company, $updates, $check_only);
+
+        if (!$check_only && $ok) {
+            $this->register_contact_types();
+        }
+
+        return $ok;
+    }
+
+    /**
+     * Register the contact types owned by this module (idempotent).
+     */
+    private function register_contact_types()
+    {
+        $autoload = dirname(__FILE__) . '/vendor/autoload.php';
+        if (file_exists($autoload)) {
+            require_once $autoload;
+        }
+        if (!class_exists('\\ksfraser\\FrontAccounting\\Common\\ContactType\\ContactTypeRegistry')) {
+            return;
+        }
+
+        \ksfraser\FrontAccounting\Common\ContactType\ContactTypeRegistry::registerTypes(array(
+            new \ksfraser\FrontAccounting\Common\ContactType\ContactType(
+                'employee', 'Employee', $this->module_name,
+                'Organizational employee managed by the HRM module'
+            ),
+            new \ksfraser\FrontAccounting\Common\ContactType\ContactType(
+                'team', 'Team', $this->module_name,
+                'Organizational team or group'
+            ),
+            new \ksfraser\FrontAccounting\Common\ContactType\ContactType(
+                'job_applicant', 'Job Applicant', $this->module_name,
+                'Applicant for a job posting'
+            ),
+        ));
+    }
+
+    function deactivate_extension($company, $check_only = true)
+    {
+        if (!$check_only
+            && class_exists('\\ksfraser\\FrontAccounting\\Common\\ContactType\\ContactTypeRegistry')) {
+            \ksfraser\FrontAccounting\Common\ContactType\ContactTypeRegistry::unregisterModule($this->module_name);
+        }
+
+        return true;
     }
 
     function init()
