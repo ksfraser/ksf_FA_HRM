@@ -8,13 +8,13 @@
  * @version 1.0.0
  */
 
-// Load FAModuleMenu for menu registration
-$famodulemenuPath = dirname(__DIR__) . '/ksf_FA_Common/src/Menu/FAModuleMenu.php';
-if (file_exists($famodulemenuPath)) {
-    require_once $famodulemenuPath;
+require_once __DIR__ . '/ComposerDependencies.php';
+\ksfraser\FrontAccounting\HRM\Utils\ComposerDependencies::ensure(__DIR__);
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
 }
 
-// Load traits for workflow hooks and CRUD operations
 use ksfraser\FrontAccounting\Common\Traits\WorkflowHooksTrait;
 use ksfraser\FrontAccounting\Common\Traits\CrudOperationsTrait;
 

@@ -13,7 +13,8 @@
     ],
     "require": {
         "php": ">=7.3",
-        "ksfraser/html": "*"
+        "ksfraser/html": "*",
+        "ksfraser/ksf-fa-common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
