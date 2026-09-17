@@ -2,66 +2,42 @@
 /**
  * ksf_FA_HRM Entry Point
  *
- * Routes ?view= to the appropriate page file.
+ * App-shell router: resolves the ?view= tab from the HrmAppShell, sets the
+ * per-view security BEFORE session.inc, then boots the shell (fires the
+ * `hrm_register_tabs` register-with-me hook so other modules can add tabs),
+ * renders the sub-menu and dispatches to the tab controller SRP or page script.
  *
  * @package ksf_FA_HRM
  * @since 1.0.0
  */
 
+require_once __DIR__ . '/ComposerDependencies.php';
+\ksfraser\FrontAccounting\HRM\Utils\ComposerDependencies::ensure(__DIR__);
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 $path_to_root = "../..";
 
-$page_security = 'SA_ksf_FA_HRMVIEW';
+$appShell = new \ksfraser\FrontAccounting\HRM\App\HrmAppShell();
+
+$view = isset($_GET['view']) ? (string) $_GET['view'] : $appShell->getDefaultView();
+if ($appShell->getTab($view) === null) {
+    $view = $appShell->getDefaultView();
+}
+
+$page_security = $appShell->getSecurity($view, 'SA_ksf_FA_HRMVIEW');
 include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
-$view = isset($_GET['view']) ? $_GET['view'] : 'employees';
-
-$validViews = array(
-    'employees'   => array('file' => 'pages/employees.php',   'security' => 'SA_HRM_EMPLOYEE'),
-    'departments' => array('file' => 'pages/departments.php', 'security' => 'SA_HRM_DEPARTMENT'),
-    'positions'   => array('file' => 'pages/positions.php',   'security' => 'SA_ksf_FA_HRMMANAGE'),
-    'grades'      => array('file' => 'pages/grades.php',      'security' => 'SA_ksf_FA_HRMMANAGE'),
-    'payroll'     => array('file' => 'pages/payroll.php',     'security' => 'SA_HRM_PAYROLL'),
-    'benefits'    => array('file' => 'pages/benefits.php',    'security' => 'SA_HRM_BENEFITS'),
-    'leave'       => array('file' => 'pages/leave.php',       'security' => 'SA_HRM_LEAVE'),
-    'recruitment'  => array('file' => 'pages/recruitment.php',  'security' => 'SA_HRM_RECRUITMENT'),
-    'leave_types'  => array('file' => 'pages/leave_types.php',  'security' => 'SA_HRM_LEAVE'),
-    'reports'      => array('file' => 'pages/reports.php',      'security' => 'SA_ksf_FA_HRMVIEW'),
-);
-
-if (!isset($validViews[$view])) {
-    $view = 'employees';
-}
-
-$page_security = $validViews[$view]['security'];
-$pageFile = dirname(__FILE__) . '/' . $validViews[$view]['file'];
-
-// Build sub-menu for in-page navigation
-$menu = new \ksfraser\FrontAccounting\Common\Menu\FAModuleMenu(
-    'index.php',
-    'view',
-    $view
-);
-
-$menu->addItem('employees',    _("&Employees"),       null)
-     ->addItem('departments',  _("Departments"),      null)
-     ->addItem('positions',    _("Positions"),        null)
-     ->addItem('grades',       _("Grades"),           null)
-     ->addItem('payroll',      _("Payroll"),          null)
-     ->addItem('benefits',     _("Benefits"),         null)
-     ->addItem('leave',        _("Leave Management"), null)
-     ->addItem('leave_types',  _("Leave Types"),      null)
-     ->addItem('recruitment',  _("Recruitment"),      null)
-     ->addItem('reports',      _("Reports"),          null);
+// Fire the register-with-me hook: other modules may add their tabs now.
+$appShell->boot();
 
 page(_("HRM"), false, false, '', '');
 
-echo $menu->render();
+echo $appShell->renderMenu($view);
 
-if (file_exists($pageFile)) {
-    include($pageFile);
-} else {
-    echo "<div class='alert alert-warning'>Page not found: " . htmlspecialchars($view) . "</div>";
-}
+$appShell->dispatch($view);
 
 end_page();
