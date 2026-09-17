@@ -1,8 +1,4 @@
 <?php
-$path_to_root = "../../..";
-$page_security = 'SA_ksf_FA_HRMMANAGE';
-include_once($path_to_root . "/includes/session.inc");
-add_access_extensions();
 
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Grade.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");

@@ -1,8 +1,4 @@
 <?php
-$path_to_root = "../../..";
-$page_security = 'SA_HRM_DEPARTMENT';
-include_once($path_to_root . "/includes/session.inc");
-add_access_extensions();
 
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
 require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Team.php");

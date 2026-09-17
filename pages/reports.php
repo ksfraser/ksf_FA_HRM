@@ -1,9 +1,3 @@
-<?php
-$path_to_root = "../../..";
-$page_security = 'SA_ksf_FA_HRMVIEW';
-include_once($path_to_root . "/includes/session.inc");
-add_access_extensions();
-?>
 
 <div class="card">
     <div class="card-header"><?php echo _("HRM Reports"); ?></div>
