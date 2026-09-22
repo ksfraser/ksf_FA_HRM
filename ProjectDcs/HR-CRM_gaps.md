@@ -106,20 +106,50 @@ workflow BR (#1) uses the SuiteCRM-inspired step-table design below.
 6. `BR-HRM-02-recruitment-ats` — H1 ✅ DONE — vacancy/application pipeline
    on BR-COM-02, job_applicant CRM reuse, interview/offer stages w/ Calendar
    link + onboarding broadcast, dedupe guard, pipeline board.
-7. `BR-HRM-03-payroll-run-gross-to-net` — H2
-8. `BR-HRM-04-timesheet-payroll-integration` — H5
-9. `BR-HRM-05-onboarding-offboarding-lifecycle` — H6
-10. `BR-HRM-06-hrm-dashboards-reports` — H7
-11. `BR-HRM-07-training-certification-catalog` — H8
-12. `BR-HRM-08-employee-self-service-portal` — H9+S5
-13. `BR-CRM-01-crm-pipeline-funnel-forecast` — C1
-14. `BR-CRM-02-email-integration-imap-smtp` — C3
-15. `BR-CRM-03-quote-to-order-conversion` — C4
-16. `BR-CRM-04-marketing-campaigns` — C2
-17. `BR-CRM-05-helpdesk-tickets` — C5
-18. `BR-CRM-06-contracts-renewal-lifecycle` — C6
-19. `BR-CRM-07-crm-dashboards-kpis` — C7
-20. `BR-CRM-08-activity-automation-chaining` — C8
+7. `BR-HRM-03-payroll-run-gross-to-net` — H2 ✅ DONE — pay-batch run,
+   element engine (display_order + formula), tax/social bracket config,
+   payslip view, FA GL posting + non-reversible post, BR-COM-04 schedule.
+8. `BR-HRM-04-timesheet-payroll-integration` — H5 ✅ DONE — timesheet
+   approval on BR-COM-02 (adapter over existing service), posted-period
+   lock, OT/variable-pay element feed, approved-vs-paid reconciliation.
+9. `BR-HRM-05-onboarding-offboarding-lifecycle` — H6 ✅ DONE —
+   employee.lifecycle process (hired→onboarding→active→confirmed→
+   separating→separated), checklist catalog+instances, RBAC/leave/payroll
+   resolvers on stage entry, post-separation locks.
+10. `BR-HRM-06-hrm-dashboards-reports` — H7 ✅ DONE — directory/dept/
+    payroll/leave reports + CSV, turnover/headcount dashboard (single
+    resolver), resolver-per-dataset.
+11. `BR-HRM-07-training-certification-catalog` — H8 ✅ DONE — course
+    catalog, enrollment process over BR-007 windows, certificate issue +
+    expiry job + reminders.
+12. `BR-HRM-08-employee-self-service-portal` — H9+S5 ✅ DONE — ESS shell,
+    MY_* areas, my-leave/payslips/inbox/checklist/certs, server-enforced
+    owner scoping contract.
+13. `BR-CRM-01-crm-pipeline-funnel-forecast` — C1 ✅ DONE — pipeline config
+    (stage→probability single source), kanban view, weighted forecast
+    resolver, won/lost guards, lead→opp conversion wiring.
+14. `BR-CRM-02-email-integration-imap-smtp` — C3 ✅ DONE — mailbox adapter
+    (IMAP w/ graceful no-ext), import worker, SMTP send, mail→record
+    mapping, templates + canned replies, routing rules (assign/ticket).
+15. `BR-CRM-03-quote-to-order-conversion` — C4 ✅ DONE — quote lifecycle
+    process, accept→FA sales-order conversion (idempotent, row-gap report),
+    expiry job, opportunity-won linkage.
+16. `BR-CRM-04-marketing-campaigns` — C2 ✅ DONE — campaign entity, target
+    list snapshots, send dispatcher, open/click tracking, campaign→lead→
+    opp attribution.
+17. `BR-CRM-05-helpdesk-tickets` — C5 ✅ DONE — ticket entity + lifecycle,
+    mail-rule-born tickets, routing, canned replies, SLA due + remind job.
+18. `BR-CRM-06-contracts-renewal-lifecycle` — C6 ✅ DONE — contract entity,
+    lifecycle, append-only renewal chain + auto-renew, reminders, C7 block.
+19. `BR-CRM-07-crm-dashboards-kpis` — C7 ✅ DONE — widget registry +
+    resolver-driven cards/charts (pipeline, SLA, contracts, conversion,
+    velocity), owner filter, deep links.
+20. `BR-CRM-08-activity-automation-chaining` — C8 ✅ DONE — event surface
+    onto BR-COM-01 (replacing crm_dispatch_event no-op), seed step rows,
+    follow-up automation, append-only activity ledger.
+
+✅ **ALL 20 GAPS CLOSED (BR ratified).** Next phase = implement the substrate
+(S1–S4) so the module BRs can land on real engines.
 
 ---
 
@@ -151,13 +181,26 @@ consume it at release prep.
 
 | Gap | Requirement (FR/BR ref) | Implementing classes (module-relative) | Tests (module-relative) | Status |
 |-----|--------------------------|-----------------------------------------|--------------------------|--------|
-| S1  | BR-COM-01 (FR-COM-01-00X) | ksf_FA_Common `src/…` (pending implementation) | — | BR ratified |
-| S2  | BR-COM-02 (FR-COM-02-00X) | ksf_FA_Common `src/…` (pending implementation) | — | BR ratified |
-| S3  | BR-COM-03 (FR-COM-03-00X) | ksf_FA_Common `src/…` (+ host module mount) | — | BR ratified |
-| S4  | BR-COM-04 (FR-COM-04-00X) | ksf_FA_Common `src/…` (+ cron entry) | — | BR ratified |
-| H1…H9, C1…C8 | FR-HRM-0XX / FR-CRM-0XX (per §5 BRs) | filled when implemented | — | pending |
-| H3  | BR-HRM-01 (FR-HRM-001-00X) | ksf_FA_HRM `src/Leave/…`, `pages/leave*.php`, `sql/0_hrm_leave_request*.sql` | — | BR ratified |
-| H1  | BR-HRM-02 (FR-HRM-002-00X) | ksf_FA_HRM `src/Recruitment/…`, `pages/recruitment*.php`, `sql/0_hrm_vacanc*.sql` | — | BR ratified |
+| S1  | BR-COM-01 (FR-COM-01-006) | ksf_FA_Common `src/Workflow/…`, `src/Contract/DtoProviderInterface.php` | — | BR ratified |
+| S2  | BR-COM-02 (FR-COM-02-003) | ksf_FA_Common `src/Workflow/…` (state engine) | — | BR ratified |
+| S3  | BR-COM-03 (FR-COM-03-001) | ksf_FA_Common `src/Notification/…` (+ host module mount) | — | BR ratified |
+| S4  | BR-COM-04 (FR-COM-04-002) | ksf_FA_Common `src/Scheduler/…` (+ cron entry) | — | BR ratified |
+| H3  | BR-HRM-01 (FR-HRM-001-001) | ksf_FA_HRM `src/Leave/…`, `pages/leave*.php`, `sql/0_hrm_leave_request*.sql` | — | BR ratified |
+| H1  | BR-HRM-02 (FR-HRM-002-001) | ksf_FA_HRM `src/Recruitment/…`, `pages/recruitment*.php`, `sql/0_hrm_vacanc*.sql` | — | BR ratified |
+| H2  | BR-HRM-03 (FR-HRM-003-001) | ksf_FA_HRM `src/Payroll/…`, `pages/payroll*.php`, `sql/0_hrm_pay_batches.sql` | — | BR ratified |
+| H5  | BR-HRM-04 (FR-HRM-004-003) | ksf_FA_HRM `src/TimesheetLink/…`, ksf_Timesheets entity/service | — | BR ratified |
+| H6  | BR-HRM-05 (FR-HRM-005-001) | ksf_FA_HRM `src/Lifecycle/…`, `sql/0_hrm_checklist*.sql` | — | BR ratified |
+| H7  | BR-HRM-06 (FR-HRM-006-001) | ksf_FA_HRM `src/Reporting/…`, `pages/reports.php` | — | BR ratified |
+| H8  | BR-HRM-07 (FR-HRM-007-001) | ksf_FA_HRM `src/Training/…`, `sql/0_hrm_courses.sql` | — | BR ratified |
+| H9+S5 | BR-HRM-08 (FR-HRM-008-008) | ksf_FA_HRM `src/SelfService/…`, `ess/*.php` | — | BR ratified |
+| C1  | BR-CRM-01 (FR-CRM-001-003) | ksf_FA_CRM `src/Pipeline/…`, `pages/opportunities.php` | — | BR ratified |
+| C3  | BR-CRM-02 (FR-CRM-002-001) | ksf_FA_CRM `src/Mailbox/…`, `sql/0_fa_crm_mail_*.sql` | — | BR ratified |
+| C4  | BR-CRM-03 (FR-CRM-003-002) | ksf_FA_CRM `src/Quote/…`, `pages/quotes.php` | — | BR ratified |
+| C2  | BR-CRM-04 (FR-CRM-004-001) | ksf_FA_CRM `src/Campaign/…`, `sql/0_fa_crm_campaigns.sql` | — | BR ratified |
+| C5  | BR-CRM-05 (FR-CRM-005-001) | ksf_FA_CRM `src/Helpdesk/…`, `sql/0_fa_crm_tickets.sql` | — | BR ratified |
+| C6  | BR-CRM-06 (FR-CRM-006-001) | ksf_FA_CRM `src/Contract/…`, `sql/0_fa_crm_contracts.sql` | — | BR ratified |
+| C7  | BR-CRM-07 (FR-CRM-007-001) | ksf_FA_CRM `src/Dashboard/…`, `pages/dashboard.php` | — | BR ratified |
+| C8  | BR-CRM-08 (FR-CRM-008-001) | ksf_FA_CRM `src/Automation/…`, `includes/crm_db.inc` | — | BR ratified |
 
 Rule: a status becomes "implemented" only when the class paths and their tests
 are real files in the module tree (verified at release prep, not by intent).
