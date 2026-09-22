@@ -57,7 +57,7 @@ class EventEmployeeMembershipService
     public function classifyAttendees(array &$data, ?array $opts = null): void
     {
         if (!isset($data['dto'], $data['classification']) || !is_array($data['classification'])) {
-            return不下;
+            return;
         }
 
         $dto = $data['dto'];
@@ -71,7 +71,7 @@ class EventEmployeeMembershipService
         }
 
         try {
-            $rows = $this->repo->findEmploymentByEmails($emails);
+            $rows = $this->repo->findPersonsByEmails($emails);
         } catch (\Throwable $e) {
             error_log('[ksf_FA_HRM] ksf_event_classify_attendees resolve failed: ' . $e->getMessage());
             return;
@@ -120,7 +120,7 @@ class EventEmployeeMembershipService
         $closed  = $this->dtoDateTime($dto, 'closed_at');
 
         try {
-            $rows = $this->repo->findEmploymentByEmails($emails);
+            $rows = $this->repo->findPersonsByEmails($emails);
             $count = 0;
             foreach ($emails as $email) {
                 if ($this->classifyOne($email, $rows) !== 'member') {
