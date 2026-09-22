@@ -100,7 +100,9 @@ workflow BR (#1) uses the SuiteCRM-inspired step-table design below.
 4. `BR-COM-04-scheduled-automation-jobs` — S4 ✅ DONE — cron-friendly CLI
    runner + jobs registry, one-shot jobs for BR-COM-02 time-wait edges, web
    tickle fallback for no-cron environments.
-5. `BR-HRM-01-leave-approval-workflow` — H3 (+S2)
+5. `BR-HRM-01-leave-approval-workflow` — H3 ✅ DONE — vertical slice on
+   BR-COM-02: request tables, entitlement submit guard, approver chain over
+   reports_to, notifications, consume_days + calendar, security-area gates.
 6. `BR-HRM-02-recruitment-ats` — H1
 7. `BR-HRM-03-payroll-run-gross-to-net` — H2
 8. `BR-HRM-04-timesheet-payroll-integration` — H5
@@ -152,6 +154,7 @@ consume it at release prep.
 | S3  | BR-COM-03 (FR-COM-03-00X) | ksf_FA_Common `src/…` (+ host module mount) | — | BR ratified |
 | S4  | BR-COM-04 (FR-COM-04-00X) | ksf_FA_Common `src/…` (+ cron entry) | — | BR ratified |
 | H1…H9, C1…C8 | FR-HRM-0XX / FR-CRM-0XX (per §5 BRs) | filled when implemented | — | pending |
+| H3  | BR-HRM-01 (FR-HRM-001-00X) | ksf_FA_HRM `src/Leave/…`, `pages/leave*.php`, `sql/0_hrm_leave_request*.sql` | — | BR ratified |
 
 Rule: a status becomes "implemented" only when the class paths and their tests
 are real files in the module tree (verified at release prep, not by intent).
