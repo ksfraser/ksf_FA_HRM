@@ -81,8 +81,9 @@ class hooks_ksf_FA_HRM extends hooks
         }
 
         $updates = array(
-            'install.sql'             => array('fa_departments'),
+            'install.sql'               => array('fa_departments'),
             'retag_contact_types.sql' => array('ksf_contact_types'),
+            'ksf_hrm_event_windows.sql' => array('hrm_event_windows'),
         );
 
         $ok = $this->update_databases($company, $updates, $check_only);
@@ -544,6 +545,57 @@ class hooks_ksf_FA_HRM extends hooks
         $service = new \ksfraser\FrontAccounting\HRM\Service\CommissionService();
         $created = $service->onOrderImported($data);
         $data['commissions_created'] = count($created);
+    }
+
+    /**
+     * ksf_event_classify_attendees responder — append member/external emails.
+     *
+     * Invoked by the Timesheets aggregator's hook_invoke_all loop with the
+     * classification payload BY REFERENCE. HRM APPENDS (never guesses — AZZ)
+     * into $data['classification']['member'|'external']; an attendee email with
+     * no person row stays 'unclassified'. Never mutates the EventClosedDto,
+     * never throws out of the responder, never blocks the caller's loop.
+     *
+     * @param array $data Payload (by ref): dto + classification
+     * @param array|null $opts Options
+     * @return void
+     */
+    public function ksf_event_classify_attendees(&$data, $opts = null)
+    {
+        if (!class_exists('ksfraser\FrontAccounting\HRM\Service\EventEmployeeMembershipService')) {
+            return;
+        }
+        try {
+            $service = new \ksfraser\FrontAccounting\HRM\Service\EventEmployeeMembershipService();
+            $service->classifyAttendees($data, $opts);
+        } catch (\Throwable $e) {
+            error_log('[ksf_FA_HRM] ksf_event_classify_attendees failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ksf_event_closed responder — append worked-window evidence (UC-HRM-007-001
+     * step 4 / FR-HRM-007-001 REQ-4).
+     *
+     * HR-track events only: ONE read-only, append-only row per (event, member)
+     * into HRM's OWN 0_hrm_event_windows table (INSERT IGNORE, idempotent on
+     * re-close). The EventClosedDto is never touched; a responder never throws.
+     *
+     * @param mixed $dto EventClosedDto (read-only input)
+     * @param array|null $opts Options
+     * @return void
+     */
+    public function ksf_event_closed($dto, $opts = null)
+    {
+        if (!class_exists('ksfraser\FrontAccounting\HRM\Service\EventEmployeeMembershipService')) {
+            return;
+        }
+        try {
+            $service = new \ksfraser\FrontAccounting\HRM\Service\EventEmployeeMembershipService();
+            $service->recordWorkedWindows($dto, $opts);
+        } catch (\Throwable $e) {
+            error_log('[ksf_FA_HRM] ksf_event_closed failed: ' . $e->getMessage());
+        }
     }
 }
 
