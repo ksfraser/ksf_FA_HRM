@@ -1,10 +1,10 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Payroll.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/PayrollEntry.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PayrollRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/PayrollService.php");
+require_once(__DIR__ . '/../src/Entity/Payroll.php');
+require_once(__DIR__ . '/../src/Entity/PayrollEntry.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/PayrollRepository.php');
+require_once(__DIR__ . '/../src/Service/PayrollService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\PayrollService;
 

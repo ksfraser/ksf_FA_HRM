@@ -1,10 +1,10 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Benefit.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/EmployeeBenefit.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/BenefitRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/BenefitsService.php");
+require_once(__DIR__ . '/../src/Entity/Benefit.php');
+require_once(__DIR__ . '/../src/Entity/EmployeeBenefit.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/BenefitRepository.php');
+require_once(__DIR__ . '/../src/Service/BenefitsService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\BenefitsService;
 

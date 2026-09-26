@@ -1,7 +1,7 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/LookupRepository.php");
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/LookupRepository.php');
 
 use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
 

@@ -1,14 +1,14 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Employee.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/EmployeeRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/GradeRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/LookupRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Exception/EmployeeNotFoundException.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Exception/ValidationException.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/EmployeeService.php");
+require_once(__DIR__ . '/../src/Entity/Employee.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/EmployeeRepository.php');
+require_once(__DIR__ . '/../src/Repository/PositionRepository.php');
+require_once(__DIR__ . '/../src/Repository/GradeRepository.php');
+require_once(__DIR__ . '/../src/Repository/LookupRepository.php');
+require_once(__DIR__ . '/../src/Exception/EmployeeNotFoundException.php');
+require_once(__DIR__ . '/../src/Exception/ValidationException.php');
+require_once(__DIR__ . '/../src/Service/EmployeeService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\EmployeeService;
 

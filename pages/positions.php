@@ -1,15 +1,15 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Position.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Team.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/RoleDictionary.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/PositionRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/TeamRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/RoleRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/PositionService.php");
+require_once(__DIR__ . '/../src/Entity/Position.php');
+require_once(__DIR__ . '/../src/Entity/Department.php');
+require_once(__DIR__ . '/../src/Entity/Team.php');
+require_once(__DIR__ . '/../src/Entity/RoleDictionary.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/PositionRepository.php');
+require_once(__DIR__ . '/../src/Repository/DepartmentRepository.php');
+require_once(__DIR__ . '/../src/Repository/TeamRepository.php');
+require_once(__DIR__ . '/../src/Repository/RoleRepository.php');
+require_once(__DIR__ . '/../src/Service/PositionService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\PositionService;
 

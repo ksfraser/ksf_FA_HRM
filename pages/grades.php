@@ -1,9 +1,9 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Grade.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/GradeRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/GradeService.php");
+require_once(__DIR__ . '/../src/Entity/Grade.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/GradeRepository.php');
+require_once(__DIR__ . '/../src/Service/GradeService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\GradeService;
 

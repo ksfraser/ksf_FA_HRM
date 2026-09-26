@@ -1,11 +1,11 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Team.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/TeamRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/TeamService.php");
+require_once(__DIR__ . '/../src/Entity/Team.php');
+require_once(__DIR__ . '/../src/Entity/Department.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/TeamRepository.php');
+require_once(__DIR__ . '/../src/Repository/DepartmentRepository.php');
+require_once(__DIR__ . '/../src/Service/TeamService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\TeamService;
 

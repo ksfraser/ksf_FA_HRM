@@ -1,12 +1,12 @@
 <?php
 
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Role.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/RoleDictionary.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Entity/Department.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/FatRepositoryTrait.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/RoleRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Repository/DepartmentRepository.php");
-require_once($path_to_root . "/modules/ksf_FA_HRM/src/Service/RoleService.php");
+require_once(__DIR__ . '/../src/Entity/Role.php');
+require_once(__DIR__ . '/../src/Entity/RoleDictionary.php');
+require_once(__DIR__ . '/../src/Entity/Department.php');
+require_once(__DIR__ . '/../src/Repository/FatRepositoryTrait.php');
+require_once(__DIR__ . '/../src/Repository/RoleRepository.php');
+require_once(__DIR__ . '/../src/Repository/DepartmentRepository.php');
+require_once(__DIR__ . '/../src/Service/RoleService.php');
 
 use ksfraser\FrontAccounting\HRM\Service\RoleService;
 
