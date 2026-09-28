@@ -61,6 +61,9 @@ class hooks_ksf_FA_HRM extends hooks
         $security_areas['SA_HRM_LEAVE'] = array(
             SS_ksf_FA_HRM | 7, _("Leave Management")
         );
+        $security_areas['SA_LEAVE_APPROVE'] = array(
+            SS_ksf_FA_HRM | 11, _("Approve Leave")
+        );
         $security_areas['SA_HRM_RECRUITMENT'] = array(
             SS_ksf_FA_HRM | 8, _("Recruitment")
         );
@@ -84,6 +87,7 @@ class hooks_ksf_FA_HRM extends hooks
             'install.sql'               => array('fa_departments'),
             'retag_contact_types.sql' => array('ksf_contact_types'),
             'ksf_hrm_event_windows.sql' => array('hrm_event_windows'),
+            'ksf_hrm_leave_requests.sql' => array('hrm_leave_requests'),
         );
 
         $ok = $this->update_databases($company, $updates, $check_only);
@@ -143,6 +147,47 @@ class hooks_ksf_FA_HRM extends hooks
         $this->registerWorkflowType('grade', 'hrm_grade');
         $this->registerWorkflowType('payroll', 'hrm_payroll');
         $this->registerWorkflowType('benefit', 'hrm_benefit');
+        $this->registerWorkflowType('leave_request', 'hrm_leave');
+    }
+
+    /**
+     * Assemble the leave approval StateMachine for the current FA session
+     * (FaStateStore + SA_LEAVE_APPROVE access check).
+     *
+     * @return \ksfraser\FrontAccounting\HRM\Leave\LeaveService
+     */
+    protected function leaveService()
+    {
+        $autoload = __DIR__ . '/vendor/autoload.php';
+        if (file_exists($autoload)) {
+            require_once $autoload;
+        }
+
+        $requests = new \ksfraser\FrontAccounting\HRM\Repository\LeaveRequestRepository();
+        $balances = new \ksfraser\FrontAccounting\HRM\Repository\LeaveBalanceRepository();
+        $chain    = new \ksfraser\FrontAccounting\HRM\Leave\ApproverChainService($requests);
+        $factory  = new \ksfraser\FrontAccounting\HRM\Leave\LeaveWorkflowFactory($requests, $balances, $chain);
+
+        $accessCheck = static function (string $area): bool {
+            return isset($_SESSION['wa_current_user'])
+                && \method_exists($_SESSION['wa_current_user'], 'can_access_page')
+                && $_SESSION['wa_current_user']->can_access_page($area);
+        };
+
+        $sm = $factory->assemble(
+            new \ksfraser\FrontAccounting\Common\Workflow\FaStateStore(),
+            $accessCheck
+        );
+
+        $notifier = new \ksfraser\FrontAccounting\HRM\Leave\LeaveNotifier(
+            static function (int $personId): ?int {
+                return \ksfraser\FrontAccounting\HRM\Leave\LeaveNotifierMap::faUserIdForPerson($personId);
+            }
+        );
+
+        return new \ksfraser\FrontAccounting\HRM\Leave\LeaveService(
+            $requests, $sm, $notifier, $notifier->notifier()
+        );
     }
 
     protected function createRecordInternal(string $recordType, array $data): array

@@ -37,7 +37,7 @@ The business requires:
    (title template, body/fields, deep link to the source record page, icon),
    matching the `get_dto` schema pattern — the inbox renders any module's
    notifications without knowing them.
-5. **Append-only, audit-safe**: rows are INSERT-only (`0_ksf_notifications`);
+5. **Append-only, audit-safe**: rows are INSERT-only (`0_ksf_notification_inbox`);
    `read_at`/`dismissed_at` update the owner row only. Mirrors BR-007 /
    BR-COM-02 append-only discipline.
 6. **Silence is safe**: unknown type, unresolvable recipient, or renderer
@@ -59,8 +59,17 @@ The business requires:
 
 ### Table (append-only, `0_` literal for FA install)
 
+> **Naming decision (2026-09):** this spec originally named the inbox
+> `0_ksf_notifications`, but that name is already taken by the existing
+> dispatch/outbox table (`ksf_notifications`, used by
+> `Common\Notification\NotificationRepository` in the same `install.sql`). Per
+> user decision the inbox lives in **`0_ksf_notification_inbox`** with prefs in
+> **`0_ksf_notification_prefs`** and the @all watermark in
+> **`0_ksf_notification_watermark`**. The outbox subsystem is untouched. If this
+> rename propagates anywhere else, keep the new names.
+
 ```sql
-CREATE TABLE IF NOT EXISTS `0_ksf_notifications` (
+CREATE TABLE IF NOT EXISTS `0_ksf_notification_inbox` (
   `id`            INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `recipient_uid` INT(11) NOT NULL,          -- FA user id (0 = @all placeholder)
   `type`          VARCHAR(60) NOT NULL,      -- 'hrm.leave_approved', ...
