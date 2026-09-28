@@ -21,10 +21,12 @@ class GradeService
 {
     use DdlCacheTrait;
 
-    private GradeRepository $gradeRepo;
+    /** @var GradeRepository */
+    private $gradeRepo;
 
     /** @var array[]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(?GradeRepository $repo = null)
     {

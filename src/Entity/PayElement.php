@@ -6,14 +6,22 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class PayElement
 {
-    private int $elementId;
-    private string $elementCode;
-    private string $elementName;
-    private string $category;
-    private string $calculationType;
-    private float $defaultValue;
-    private ?string $glAccountCode;
-    private bool $isActive;
+    /** @var int */
+    private $elementId;
+    /** @var string */
+    private $elementCode;
+    /** @var string */
+    private $elementName;
+    /** @var string */
+    private $category;
+    /** @var string */
+    private $calculationType;
+    /** @var float */
+    private $defaultValue;
+    /** @var string|null */
+    private $glAccountCode;
+    /** @var bool */
+    private $isActive;
 
     public function __construct(array $data)
     {

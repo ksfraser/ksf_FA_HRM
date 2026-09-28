@@ -8,7 +8,8 @@ use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
 
 class LookupService
 {
-    private LookupRepository $lookupRepo;
+    /** @var LookupRepository */
+    private $lookupRepo;
 
     public function __construct()
     {

@@ -6,11 +6,16 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class RoleDictionary
 {
-    private int $roleDictId;
-    private string $roleName;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
+    /** @var int */
+    private $roleDictId;
+    /** @var string */
+    private $roleName;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
 
     public function __construct(array $data)
     {

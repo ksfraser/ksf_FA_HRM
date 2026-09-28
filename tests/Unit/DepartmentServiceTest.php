@@ -157,7 +157,7 @@ class DepartmentServiceTest extends TestCase
         }
 
         // The selected option in options2 should be marked
-        $selected = array_filter($options2, fn($o) => $o->isSelected());
+        $selected = array_filter($options2, function ($o) { return $o->isSelected(); });
         $this->assertCount(1, $selected);
         $this->assertSame('1', reset($selected)->getValue());
     }
@@ -517,7 +517,7 @@ class DepartmentServiceTest extends TestCase
 
         // But options2 should be cloned with selection applied
         $this->assertNotSame($options1, $options2);
-        $selectedOpts = array_filter($options2, fn($o) => $o->isSelected());
+        $selectedOpts = array_filter($options2, function ($o) { return $o->isSelected(); });
         $this->assertCount(1, $selectedOpts);
     }
 }

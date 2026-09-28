@@ -20,13 +20,13 @@ class DepartmentRepository
     public function findAll(string $orderBy = 'department_code'): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_departments ORDER BY " . $orderBy;
-        return array_map(fn($r) => new Department($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Department($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findActive(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_departments WHERE is_active = 1 ORDER BY department_name";
-        return array_map(fn($r) => new Department($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Department($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

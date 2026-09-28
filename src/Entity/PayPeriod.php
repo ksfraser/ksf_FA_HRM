@@ -6,13 +6,20 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class PayPeriod
 {
-    private int $periodId;
-    private string $periodName;
-    private string $periodStart;
-    private string $periodEnd;
-    private string $payDate;
-    private string $frequency;
-    private string $status;
+    /** @var int */
+    private $periodId;
+    /** @var string */
+    private $periodName;
+    /** @var string */
+    private $periodStart;
+    /** @var string */
+    private $periodEnd;
+    /** @var string */
+    private $payDate;
+    /** @var string */
+    private $frequency;
+    /** @var string */
+    private $status;
 
     public function __construct(array $data)
     {

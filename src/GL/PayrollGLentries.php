@@ -39,8 +39,8 @@ class PayrollGLentries
             'description' => $description,
             'employee_id' => $employeeId,
             'lines' => $glEntries,
-            'total_debit' => array_sum(array_column(array_filter($glEntries, fn($e) => $e['type'] === 'expense'), 'amount')),
-            'total_credit' => array_sum(array_column(array_filter($glEntries, fn($e) => $e['type'] === 'liability'), 'amount')),
+            'total_debit' => array_sum(array_column(array_filter($glEntries, function ($e) { return $e['type'] === 'expense'; }), 'amount')),
+            'total_credit' => array_sum(array_column(array_filter($glEntries, function ($e) { return $e['type'] === 'liability'; }), 'amount')),
         ];
     }
 

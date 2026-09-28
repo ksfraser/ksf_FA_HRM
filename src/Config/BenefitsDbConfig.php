@@ -11,7 +11,7 @@ class BenefitsDbConfig
      *
      * @var array Configuration for benefits queries
      */
-    private array $config = [
+    private $config = [
         'table_prefix' => TB_PREF . 'hrm_',
         'fields' => [
             'benefit_id' => 'benefit_id',

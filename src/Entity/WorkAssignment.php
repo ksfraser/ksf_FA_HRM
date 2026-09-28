@@ -6,19 +6,32 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class WorkAssignment
 {
-    private int $assignmentId;
-    private int $employmentId;
-    private int $positionId;
-    private ?int $gradeId;
-    private float $salaryAmount;
-    private float $hourlyRate;
-    private string $payFrequency;
-    private string $effectiveDate;
-    private ?string $endDate;
-    private bool $isCurrent;
-    private ?string $reason;
-    private ?int $approvedByPersonId;
-    private string $approvalStatus;
+    /** @var int */
+    private $assignmentId;
+    /** @var int */
+    private $employmentId;
+    /** @var int */
+    private $positionId;
+    /** @var int|null */
+    private $gradeId;
+    /** @var float */
+    private $salaryAmount;
+    /** @var float */
+    private $hourlyRate;
+    /** @var string */
+    private $payFrequency;
+    /** @var string */
+    private $effectiveDate;
+    /** @var string|null */
+    private $endDate;
+    /** @var bool */
+    private $isCurrent;
+    /** @var string|null */
+    private $reason;
+    /** @var int|null */
+    private $approvedByPersonId;
+    /** @var string */
+    private $approvalStatus;
 
     public function __construct(array $data)
     {

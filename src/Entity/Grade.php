@@ -6,15 +6,24 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Grade
 {
-    private int $gradeId;
-    private ?string $gradeCode;
-    private string $gradeName;
-    private float $minSalary;
-    private float $maxSalary;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $gradeId;
+    /** @var string|null */
+    private $gradeCode;
+    /** @var string */
+    private $gradeName;
+    /** @var float */
+    private $minSalary;
+    /** @var float */
+    private $maxSalary;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

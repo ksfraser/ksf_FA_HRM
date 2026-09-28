@@ -6,12 +6,18 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Dependent
 {
-    private int $dependentId;
-    private int $personId;
-    private string $dependentName;
-    private ?string $relationship;
-    private ?string $dateOfBirth;
-    private bool $isBeneficiary;
+    /** @var int */
+    private $dependentId;
+    /** @var int */
+    private $personId;
+    /** @var string */
+    private $dependentName;
+    /** @var string|null */
+    private $relationship;
+    /** @var string|null */
+    private $dateOfBirth;
+    /** @var bool */
+    private $isBeneficiary;
 
     public function __construct(array $data)
     {

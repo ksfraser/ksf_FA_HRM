@@ -6,18 +6,30 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Payroll
 {
-    private int $payrollId;
-    private int $personId;
-    private string $payPeriodStart;
-    private string $payPeriodEnd;
-    private float $grossPay;
-    private float $totalDeductions;
-    private float $netPay;
-    private string $payDate;
-    private string $status;
-    private bool $glPosted;
-    private ?string $employeeName;
-    private ?string $employeeCode;
+    /** @var int */
+    private $payrollId;
+    /** @var int */
+    private $personId;
+    /** @var string */
+    private $payPeriodStart;
+    /** @var string */
+    private $payPeriodEnd;
+    /** @var float */
+    private $grossPay;
+    /** @var float */
+    private $totalDeductions;
+    /** @var float */
+    private $netPay;
+    /** @var string */
+    private $payDate;
+    /** @var string */
+    private $status;
+    /** @var bool */
+    private $glPosted;
+    /** @var string|null */
+    private $employeeName;
+    /** @var string|null */
+    private $employeeCode;
 
     public function __construct(array $data)
     {

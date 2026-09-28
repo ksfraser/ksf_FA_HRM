@@ -22,11 +22,14 @@ class RoleService
 {
     use DdlCacheTrait;
 
-    private RoleRepository $roleRepo;
-    private DepartmentRepository $deptRepo;
+    /** @var RoleRepository */
+    private $roleRepo;
+    /** @var DepartmentRepository */
+    private $deptRepo;
 
     /** @var array[]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(?RoleRepository $roleRepo = null, ?DepartmentRepository $deptRepo = null)
     {

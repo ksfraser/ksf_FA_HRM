@@ -21,10 +21,12 @@ class BenefitsService
 {
     use DdlCacheTrait;
 
-    private BenefitRepository $benefitRepo;
+    /** @var BenefitRepository */
+    private $benefitRepo;
 
     /** @var array[]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(?BenefitRepository $repo = null)
     {

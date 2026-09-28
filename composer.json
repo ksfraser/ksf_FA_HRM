@@ -24,5 +24,8 @@
             "ksfraser\\FrontAccounting\\HRM\\": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "scripts": {
+        "lint:php73": "tools/lint-php73.sh"
+    }
 }

@@ -6,16 +6,26 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Department
 {
-    private int $departmentId;
-    private ?string $departmentCode;
-    private string $departmentName;
-    private ?int $managerPersonId;
-    private ?int $parentDepartmentId;
-    private ?int $costCenterId;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $departmentId;
+    /** @var string|null */
+    private $departmentCode;
+    /** @var string */
+    private $departmentName;
+    /** @var int|null */
+    private $managerPersonId;
+    /** @var int|null */
+    private $parentDepartmentId;
+    /** @var int|null */
+    private $costCenterId;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

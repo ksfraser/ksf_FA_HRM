@@ -11,7 +11,7 @@ class LeaveDbConfig
      *
      * @var array Configuration for leave queries
      */
-    private array $config = [
+    private $config = [
         'table_prefix' => TB_PREF . 'hrm_',
         'fields' => [
             'leave_type_id' => 'leave_type_id',

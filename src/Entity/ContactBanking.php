@@ -6,14 +6,22 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class ContactBanking
 {
-    private int $bankingId;
-    private int $personId;
-    private ?string $bankName;
-    private ?string $branchName;
-    private ?string $accountNumber;
-    private ?string $accountType;
-    private ?string $routingNumber;
-    private bool $isPrimary;
+    /** @var int */
+    private $bankingId;
+    /** @var int */
+    private $personId;
+    /** @var string|null */
+    private $bankName;
+    /** @var string|null */
+    private $branchName;
+    /** @var string|null */
+    private $accountNumber;
+    /** @var string|null */
+    private $accountType;
+    /** @var string|null */
+    private $routingNumber;
+    /** @var bool */
+    private $isPrimary;
 
     public function __construct(array $data)
     {

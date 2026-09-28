@@ -6,19 +6,32 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Position
 {
-    private int $positionId;
-    private string $positionCode;
-    private int $departmentId;
-    private ?int $teamId;
-    private int $roleId;
-    private int $positionNumber;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
-    private ?string $departmentCode;
-    private ?string $teamCode;
-    private ?string $roleName;
+    /** @var int */
+    private $positionId;
+    /** @var string */
+    private $positionCode;
+    /** @var int */
+    private $departmentId;
+    /** @var int|null */
+    private $teamId;
+    /** @var int */
+    private $roleId;
+    /** @var int */
+    private $positionNumber;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
+    /** @var string|null */
+    private $departmentCode;
+    /** @var string|null */
+    private $teamCode;
+    /** @var string|null */
+    private $roleName;
 
     public function __construct(array $data)
     {

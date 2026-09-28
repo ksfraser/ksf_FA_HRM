@@ -6,14 +6,22 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class ContactPii
 {
-    private int $piiId;
-    private int $personId;
-    private ?string $dateOfBirth;
-    private ?string $gender;
-    private ?string $nationalId;
-    private ?string $passportNumber;
-    private ?string $taxNumber;
-    private ?string $maritalStatus;
+    /** @var int */
+    private $piiId;
+    /** @var int */
+    private $personId;
+    /** @var string|null */
+    private $dateOfBirth;
+    /** @var string|null */
+    private $gender;
+    /** @var string|null */
+    private $nationalId;
+    /** @var string|null */
+    private $passportNumber;
+    /** @var string|null */
+    private $taxNumber;
+    /** @var string|null */
+    private $maritalStatus;
 
     public function __construct(array $data)
     {

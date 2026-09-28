@@ -47,10 +47,12 @@ class DepartmentService
     use DdlCacheTrait;
 
     /** @var DepartmentRepository */
-    private DepartmentRepository $repo;
+    /** @var DepartmentRepository */
+    private $repo;
 
     /** @var Department[][]|null Static entity cache (request-scoped, department-specific) */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     /** @var string Hook name for entity retrieval */
     public const HOOK_GET_DEPARTMENTS = 'getDepartments';

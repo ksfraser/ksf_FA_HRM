@@ -19,7 +19,8 @@ use Ksfraser\HTML\Elements\HtmlOption;
  */
 class TeamServiceTest extends TestCase
 {
-    private TeamService $service;
+    /** @var TeamService */
+    private $service;
 
     protected function setUp(): void
     {
@@ -122,7 +123,7 @@ class TeamServiceTest extends TestCase
             $this->assertNotSame($opt, $options2[$i]);
         }
 
-        $selected = array_filter($options2, fn($o) => $o->isSelected());
+        $selected = array_filter($options2, function ($o) { return $o->isSelected(); });
         $this->assertCount(1, $selected);
         $this->assertSame('1', reset($selected)->getValue());
     }

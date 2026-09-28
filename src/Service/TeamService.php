@@ -22,10 +22,12 @@ class TeamService
 {
     use DdlCacheTrait;
 
-    private TeamRepository $repo;
+    /** @var TeamRepository */
+    private $repo;
 
     /** @var array[]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(?TeamRepository $repo = null)
     {

@@ -6,11 +6,16 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class SeparationReason
 {
-    private int $reasonId;
-    private string $reasonCode;
-    private string $reasonName;
-    private ?string $description;
-    private bool $isActive;
+    /** @var int */
+    private $reasonId;
+    /** @var string */
+    private $reasonCode;
+    /** @var string */
+    private $reasonName;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
 
     public function __construct(array $data)
     {

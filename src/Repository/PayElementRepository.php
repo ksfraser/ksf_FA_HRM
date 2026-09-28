@@ -20,7 +20,7 @@ class PayElementRepository
     public function findActive(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_pay_elements WHERE is_active = 1 ORDER BY element_code";
-        return array_map(fn($r) => new PayElement($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new PayElement($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findByCategory(string $category): array
@@ -28,7 +28,7 @@ class PayElementRepository
         $sql = "SELECT * FROM " . TB_PREF . "hrm_pay_elements
             WHERE category = " . $this->escape($category) . " AND is_active = 1
             ORDER BY element_code";
-        return array_map(fn($r) => new PayElement($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new PayElement($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

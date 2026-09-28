@@ -6,17 +6,28 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class PayRateHistory
 {
-    private int $rateId;
-    private int $employmentId;
-    private ?int $assignmentId;
-    private float $oldSalary;
-    private float $newSalary;
-    private float $oldHourlyRate;
-    private float $newHourlyRate;
-    private string $effectiveDate;
-    private ?string $reason;
-    private ?int $approvedByPersonId;
-    private string $approvalStatus;
+    /** @var int */
+    private $rateId;
+    /** @var int */
+    private $employmentId;
+    /** @var int|null */
+    private $assignmentId;
+    /** @var float */
+    private $oldSalary;
+    /** @var float */
+    private $newSalary;
+    /** @var float */
+    private $oldHourlyRate;
+    /** @var float */
+    private $newHourlyRate;
+    /** @var string */
+    private $effectiveDate;
+    /** @var string|null */
+    private $reason;
+    /** @var int|null */
+    private $approvedByPersonId;
+    /** @var string */
+    private $approvalStatus;
 
     public function __construct(array $data)
     {

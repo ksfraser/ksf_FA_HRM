@@ -23,7 +23,7 @@ class BenefitRepository
         $sql = "SELECT * FROM " . TB_PREF . "hrm_benefits";
         if ($activeOnly) $sql .= " WHERE is_active = 1";
         $sql .= " ORDER BY benefit_name";
-        return array_map(fn($r) => new Benefit($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Benefit($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int
@@ -67,7 +67,7 @@ class BenefitRepository
             WHERE eb.person_id = " . $this->intVal($personId) . "
             AND (eb.end_date IS NULL OR eb.end_date >= CURDATE())
             ORDER BY b.benefit_name";
-        return array_map(fn($r) => new EmployeeBenefit($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new EmployeeBenefit($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function saveEmployeeBenefit(array $data): int

@@ -12,16 +12,26 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
  */
 class CommissionRate
 {
-    private int $rateId;
-    private int $personId;
-    private string $source;
-    private string $rateType;
-    private float $rate;
-    private string $effectiveFrom;
-    private ?string $effectiveTo;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $rateId;
+    /** @var int */
+    private $personId;
+    /** @var string */
+    private $source;
+    /** @var string */
+    private $rateType;
+    /** @var float */
+    private $rate;
+    /** @var string */
+    private $effectiveFrom;
+    /** @var string|null */
+    private $effectiveTo;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

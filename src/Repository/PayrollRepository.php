@@ -28,7 +28,7 @@ class PayrollRepository
             FROM " . TB_PREF . "hrm_payroll p
             LEFT JOIN " . TB_PREF . "crm_persons c ON p.person_id = c.id
             ORDER BY p.pay_period_start DESC";
-        return array_map(fn($r) => new Payroll($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Payroll($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findByPerson(int $personId, int $limit = 12): array
@@ -36,7 +36,7 @@ class PayrollRepository
         $sql = "SELECT * FROM " . TB_PREF . "hrm_payroll
             WHERE person_id = " . $this->intVal($personId) . "
             ORDER BY pay_period_end DESC LIMIT " . $this->intVal($limit);
-        return array_map(fn($r) => new Payroll($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Payroll($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int
@@ -86,7 +86,7 @@ class PayrollRepository
             LEFT JOIN " . TB_PREF . "hrm_pay_elements e ON pe.element_id = e.element_id
             WHERE pe.payroll_id = " . $this->intVal($payrollId) . "
             ORDER BY e.element_code";
-        return array_map(fn($r) => new PayrollEntry($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new PayrollEntry($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function saveEntry(array $data): int

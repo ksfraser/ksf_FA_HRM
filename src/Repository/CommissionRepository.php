@@ -124,7 +124,7 @@ class CommissionRepository
     public function listRates(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . self::RATES_TABLE . " ORDER BY person_id, effective_from DESC";
-        return array_map(fn($r) => new CommissionRate($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionRate($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -137,7 +137,7 @@ class CommissionRepository
     {
         $sql = "SELECT * FROM " . TB_PREF . self::RATES_TABLE .
             " WHERE person_id = " . $this->intVal($personId) . " ORDER BY effective_from DESC";
-        return array_map(fn($r) => new CommissionRate($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionRate($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -203,7 +203,7 @@ class CommissionRepository
               AND is_active = 1
               AND (source = 'all' OR source = " . $this->escape($source) . ")
             ORDER BY id ASC";
-        return array_map(fn($r) => new CommissionAssignment($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionAssignment($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -214,7 +214,7 @@ class CommissionRepository
     public function listAssignments(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . self::ASSIGNMENTS_TABLE . " ORDER BY customer_id, person_id";
-        return array_map(fn($r) => new CommissionAssignment($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionAssignment($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -270,7 +270,7 @@ class CommissionRepository
         $sql = "SELECT * FROM " . TB_PREF . self::ENTRIES_TABLE . "
             WHERE fa_order_no = " . $this->intVal($orderNo) . "
               AND fa_trans_type = " . $this->intVal($transType);
-        return array_map(fn($r) => new CommissionEntry($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionEntry($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -281,7 +281,7 @@ class CommissionRepository
     public function listEntries(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . self::ENTRIES_TABLE . " ORDER BY created_at DESC";
-        return array_map(fn($r) => new CommissionEntry($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionEntry($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -294,7 +294,7 @@ class CommissionRepository
     {
         $sql = "SELECT * FROM " . TB_PREF . self::ENTRIES_TABLE .
             " WHERE person_id = " . $this->intVal($personId) . " ORDER BY created_at DESC";
-        return array_map(fn($r) => new CommissionEntry($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionEntry($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**
@@ -307,7 +307,7 @@ class CommissionRepository
     {
         $sql = "SELECT * FROM " . TB_PREF . self::ENTRIES_TABLE .
             " WHERE status = " . $this->escape($status) . " ORDER BY created_at DESC";
-        return array_map(fn($r) => new CommissionEntry($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new CommissionEntry($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     /**

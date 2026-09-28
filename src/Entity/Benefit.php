@@ -6,24 +6,42 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Benefit
 {
-    private int $benefitId;
-    private string $benefitCode;
-    private string $benefitName;
-    private ?string $benefitType;
-    private float $employerRate;
-    private float $employeeRate;
-    private float $fixedAmount;
-    private bool $isPercentageBased;
-    private string $calculationPeriod;
-    private ?string $glCodeExpense;
-    private ?string $glCodeLiability;
-    private ?string $provider;
-    private bool $isMandatory;
-    private bool $isTaxDeductible;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $benefitId;
+    /** @var string */
+    private $benefitCode;
+    /** @var string */
+    private $benefitName;
+    /** @var string|null */
+    private $benefitType;
+    /** @var float */
+    private $employerRate;
+    /** @var float */
+    private $employeeRate;
+    /** @var float */
+    private $fixedAmount;
+    /** @var bool */
+    private $isPercentageBased;
+    /** @var string */
+    private $calculationPeriod;
+    /** @var string|null */
+    private $glCodeExpense;
+    /** @var string|null */
+    private $glCodeLiability;
+    /** @var string|null */
+    private $provider;
+    /** @var bool */
+    private $isMandatory;
+    /** @var bool */
+    private $isTaxDeductible;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

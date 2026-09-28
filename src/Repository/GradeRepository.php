@@ -20,13 +20,13 @@ class GradeRepository
     public function findActive(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_grades WHERE is_active = 1 ORDER BY grade_name";
-        return array_map(fn($r) => new Grade($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Grade($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findAll(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_grades ORDER BY grade_name";
-        return array_map(fn($r) => new Grade($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Grade($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

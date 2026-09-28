@@ -6,15 +6,24 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Team
 {
-    private int $teamId;
-    private int $departmentId;
-    private ?int $parentTeamId;
-    private string $teamCode;
-    private string $teamName;
-    private ?string $description;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $teamId;
+    /** @var int */
+    private $departmentId;
+    /** @var int|null */
+    private $parentTeamId;
+    /** @var string */
+    private $teamCode;
+    /** @var string */
+    private $teamName;
+    /** @var string|null */
+    private $description;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

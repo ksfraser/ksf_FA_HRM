@@ -12,19 +12,32 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
  */
 class CommissionEntry
 {
-    private int $entryId;
-    private int $personId;
-    private int $faOrderNo;
-    private int $faTransType;
-    private string $source;
-    private ?string $sourceOrderId;
-    private ?int $customerId;
-    private float $orderTotal;
-    private float $commissionAmount;
-    private float $rate;
-    private string $status;
-    private string $orderDate;
-    private string $createdAt;
+    /** @var int */
+    private $entryId;
+    /** @var int */
+    private $personId;
+    /** @var int */
+    private $faOrderNo;
+    /** @var int */
+    private $faTransType;
+    /** @var string */
+    private $source;
+    /** @var string|null */
+    private $sourceOrderId;
+    /** @var int|null */
+    private $customerId;
+    /** @var float */
+    private $orderTotal;
+    /** @var float */
+    private $commissionAmount;
+    /** @var float */
+    private $rate;
+    /** @var string */
+    private $status;
+    /** @var string */
+    private $orderDate;
+    /** @var string */
+    private $createdAt;
 
     public function __construct(array $data)
     {

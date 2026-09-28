@@ -10,7 +10,8 @@ class PositionRepository
 {
     use FatRepositoryTrait;
 
-    private string $baseSql = "SELECT p.*, d.department_code, t.team_code, r.role_name
+    /** @var string */
+    private $baseSql = "SELECT p.*, d.department_code, t.team_code, r.role_name
         FROM " . TB_PREF . "hrm_positions p
         LEFT JOIN " . TB_PREF . "hrm_departments d ON p.department_id = d.department_id
         LEFT JOIN " . TB_PREF . "hrm_teams t ON p.team_id = t.team_id
@@ -27,13 +28,13 @@ class PositionRepository
     {
         $sql = $this->baseSql . " WHERE p.department_id = " . $this->intVal($departmentId) .
             " ORDER BY p.position_code";
-        return array_map(fn($r) => new Position($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Position($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findActive(): array
     {
         $sql = $this->baseSql . " WHERE p.is_active = 1 ORDER BY p.position_code";
-        return array_map(fn($r) => new Position($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Position($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function generatePositionCode(int $departmentId, ?int $teamId): string

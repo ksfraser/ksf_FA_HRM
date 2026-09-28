@@ -12,13 +12,20 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
  */
 class CommissionAssignment
 {
-    private int $id;
-    private int $personId;
-    private int $customerId;
-    private string $source;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $id;
+    /** @var int */
+    private $personId;
+    /** @var int */
+    private $customerId;
+    /** @var string */
+    private $source;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

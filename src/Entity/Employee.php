@@ -6,24 +6,42 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class Employee
 {
-    private int $employmentId;
-    private int $personId;
-    private ?string $employeeCode;
-    private ?int $departmentId;
-    private ?int $positionId;
-    private ?int $gradeId;
-    private int $employmentType;
-    private ?string $hireDate;
-    private ?string $probationEndDate;
-    private ?string $confirmationDate;
-    private ?string $terminationDate;
-    private ?int $separationReasonId;
-    private float $salaryAmount;
-    private ?string $loginId;
-    private ?int $reportsToPersonId;
-    private bool $isActive;
-    private string $createdAt;
-    private string $updatedAt;
+    /** @var int */
+    private $employmentId;
+    /** @var int */
+    private $personId;
+    /** @var string|null */
+    private $employeeCode;
+    /** @var int|null */
+    private $departmentId;
+    /** @var int|null */
+    private $positionId;
+    /** @var int|null */
+    private $gradeId;
+    /** @var int */
+    private $employmentType;
+    /** @var string|null */
+    private $hireDate;
+    /** @var string|null */
+    private $probationEndDate;
+    /** @var string|null */
+    private $confirmationDate;
+    /** @var string|null */
+    private $terminationDate;
+    /** @var int|null */
+    private $separationReasonId;
+    /** @var float */
+    private $salaryAmount;
+    /** @var string|null */
+    private $loginId;
+    /** @var int|null */
+    private $reportsToPersonId;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
+    /** @var string */
+    private $updatedAt;
 
     public function __construct(array $data)
     {

@@ -8,7 +8,8 @@ use ksfraser\FrontAccounting\HRM\Repository\PayrollRepository;
 
 class PayrollService
 {
-    private PayrollRepository $payrollRepo;
+    /** @var PayrollRepository */
+    private $payrollRepo;
 
     public function __construct()
     {

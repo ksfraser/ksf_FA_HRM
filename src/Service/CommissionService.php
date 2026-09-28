@@ -19,7 +19,8 @@ use ksfraser\FrontAccounting\HRM\Repository\CommissionRepository;
  */
 class CommissionService
 {
-    private CommissionRepository $repo;
+    /** @var CommissionRepository */
+    private $repo;
 
     public function __construct()
     {
@@ -74,7 +75,7 @@ class CommissionService
         $orderDate = (string)($payload['order_date'] ?? date('Y-m-d'));
 
         $existingPersonIds = array_map(
-            fn($entry) => $entry->getPersonId(),
+            function ($entry) { return $entry->getPersonId(); },
             $this->repo->findEntriesByOrder($orderNo, $transType)
         );
 

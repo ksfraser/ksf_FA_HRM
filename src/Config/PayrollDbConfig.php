@@ -11,7 +11,7 @@ class PayrollDbConfig
      *
      * @var array Configuration for payroll queries
      */
-    private array $config = [
+    private $config = [
         'table_prefix' => TB_PREF . 'hrm_',
         'fields' => [
             'employment_id' => 'employment_id',

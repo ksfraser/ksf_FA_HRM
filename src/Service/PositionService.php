@@ -23,12 +23,16 @@ class PositionService
 {
     use DdlCacheTrait;
 
-    private PositionRepository $positionRepo;
-    private TeamRepository $teamRepo;
-    private RoleRepository $roleRepo;
+    /** @var PositionRepository */
+    private $positionRepo;
+    /** @var TeamRepository */
+    private $teamRepo;
+    /** @var RoleRepository */
+    private $roleRepo;
 
     /** @var array[]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(
         ?PositionRepository $positionRepo = null,

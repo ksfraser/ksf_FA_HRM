@@ -42,7 +42,7 @@ function ksf_render_hrm_import($type)
             db_query("UPDATE " . TB_PREF . "ksf_employees SET " . implode(', ', $sets) . " WHERE emp_no = " . db_escape($emp_no));
         } else {
             $cols = implode(', ', array_keys($row));
-            $vals = implode(', ', array_map(fn($v) => db_escape($v), array_values($row)));
+            $vals = implode(', ', array_map(function ($v) { return db_escape($v); }, array_values($row)));
             db_query("INSERT INTO " . TB_PREF . "ksf_employees ($cols) VALUES ($vals)");
         }
         

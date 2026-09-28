@@ -14,7 +14,7 @@ class RoleRepository
     public function findDictionary(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_role_dictionary ORDER BY role_name";
-        return array_map(fn($r) => new RoleDictionary($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new RoleDictionary($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findById(int $id): ?Role
@@ -31,7 +31,7 @@ class RoleRepository
             LEFT JOIN " . TB_PREF . "hrm_role_dictionary rd ON r.role_dict_id = rd.role_dict_id
             WHERE r.department_id = " . $this->intVal($departmentId) .
             " ORDER BY r.role_name";
-        return array_map(fn($r) => new Role($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Role($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findAll(): array
@@ -41,7 +41,7 @@ class RoleRepository
             LEFT JOIN " . TB_PREF . "hrm_role_dictionary rd ON r.role_dict_id = rd.role_dict_id
             LEFT JOIN " . TB_PREF . "hrm_departments d ON r.department_id = d.department_id
             ORDER BY d.department_code, r.role_name";
-        return array_map(fn($r) => new Role($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Role($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

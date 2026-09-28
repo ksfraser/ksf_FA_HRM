@@ -6,11 +6,16 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class PayrollEntry
 {
-    private int $entryId;
-    private int $payrollId;
-    private int $elementId;
-    private float $amount;
-    private ?string $note;
+    /** @var int */
+    private $entryId;
+    /** @var int */
+    private $payrollId;
+    /** @var int */
+    private $elementId;
+    /** @var float */
+    private $amount;
+    /** @var string|null */
+    private $note;
 
     public function __construct(array $data)
     {

@@ -13,10 +13,14 @@ use ksfraser\FrontAccounting\HRM\Exception\EmployeeNotFoundException;
 
 class EmployeeService
 {
-    private EmployeeRepository $employeeRepo;
-    private PositionRepository $positionRepo;
-    private GradeRepository $gradeRepo;
-    private LookupRepository $lookupRepo;
+    /** @var EmployeeRepository */
+    private $employeeRepo;
+    /** @var PositionRepository */
+    private $positionRepo;
+    /** @var GradeRepository */
+    private $gradeRepo;
+    /** @var LookupRepository */
+    private $lookupRepo;
 
     public function __construct()
     {

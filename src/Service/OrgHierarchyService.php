@@ -11,10 +11,14 @@ use ksfraser\FrontAccounting\HRM\Repository\PositionRepository;
 
 class OrgHierarchyService
 {
-    private DepartmentRepository $deptRepo;
-    private TeamRepository $teamRepo;
-    private RoleRepository $roleRepo;
-    private PositionRepository $positionRepo;
+    /** @var DepartmentRepository */
+    private $deptRepo;
+    /** @var TeamRepository */
+    private $teamRepo;
+    /** @var RoleRepository */
+    private $roleRepo;
+    /** @var PositionRepository */
+    private $positionRepo;
 
     public function __construct()
     {

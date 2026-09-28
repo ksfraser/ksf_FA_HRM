@@ -24,7 +24,7 @@ class TeamRepository
             LEFT JOIN " . TB_PREF . "hrm_teams parent ON t.parent_team_id = parent.team_id
             WHERE t.department_id = " . $this->intVal($departmentId) .
             " ORDER BY parent.team_name, t.team_name";
-        return array_map(fn($r) => new Team($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Team($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findActiveByDepartment(int $departmentId): array
@@ -32,7 +32,7 @@ class TeamRepository
         $sql = "SELECT * FROM " . TB_PREF . "hrm_teams
             WHERE department_id = " . $this->intVal($departmentId) . " AND is_active = 1
             ORDER BY team_name";
-        return array_map(fn($r) => new Team($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Team($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findAll(): array
@@ -43,7 +43,7 @@ class TeamRepository
             LEFT JOIN " . TB_PREF . "hrm_departments d ON t.department_id = d.department_id
             LEFT JOIN " . TB_PREF . "hrm_teams parent ON t.parent_team_id = parent.team_id
             ORDER BY d.department_code, parent.team_name, t.team_name";
-        return array_map(fn($r) => new Team($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Team($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

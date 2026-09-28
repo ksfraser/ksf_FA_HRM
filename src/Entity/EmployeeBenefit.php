@@ -6,16 +6,26 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class EmployeeBenefit
 {
-    private int $id;
-    private int $personId;
-    private int $benefitId;
-    private string $effectiveDate;
-    private ?string $endDate;
-    private ?float $customEmployerRate;
-    private ?float $customEmployeeRate;
-    private ?string $notes;
-    private bool $isActive;
-    private string $createdAt;
+    /** @var int */
+    private $id;
+    /** @var int */
+    private $personId;
+    /** @var int */
+    private $benefitId;
+    /** @var string */
+    private $effectiveDate;
+    /** @var string|null */
+    private $endDate;
+    /** @var float|null */
+    private $customEmployerRate;
+    /** @var float|null */
+    private $customEmployeeRate;
+    /** @var string|null */
+    private $notes;
+    /** @var bool */
+    private $isActive;
+    /** @var string */
+    private $createdAt;
 
     public function __construct(array $data)
     {

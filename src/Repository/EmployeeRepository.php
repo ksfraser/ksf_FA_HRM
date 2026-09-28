@@ -10,7 +10,8 @@ class EmployeeRepository
 {
     use FatRepositoryTrait;
 
-    private string $baseSql = "SELECT e.*, d.department_name, d.department_code,
+    /** @var string */
+    private $baseSql = "SELECT e.*, d.department_name, d.department_code,
         p.position_code, r.role_name, tm.team_name,
         CONCAT(COALESCE(cp.firstname, ''), ' ', COALESCE(cp.lastname, '')) AS person_name
         FROM " . TB_PREF . "hrm_contacts_employment e
@@ -37,13 +38,13 @@ class EmployeeRepository
     public function findAll(): array
     {
         $sql = $this->baseSql . " ORDER BY e.employee_code ASC";
-        return array_map(fn($r) => new Employee($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Employee($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function findActive(): array
     {
         $sql = $this->baseSql . " WHERE e.is_active = 1 ORDER BY e.employee_code ASC";
-        return array_map(fn($r) => new Employee($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new Employee($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function save(array $data): int

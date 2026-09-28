@@ -21,10 +21,12 @@ class EmploymentStatusService
 {
     use DdlCacheTrait;
 
-    private LookupRepository $repo;
+    /** @var LookupRepository */
+    private $repo;
 
     /** @var EmploymentStatus[][]|null Entity cache */
-    private static ?array $entityCache = null;
+    /** @var array|null */
+    private static $entityCache = null;
 
     public function __construct(?LookupRepository $repo = null)
     {
@@ -41,7 +43,7 @@ class EmploymentStatusService
         }
         $all = $this->repo->getEmploymentStatuses();
         if ($activeOnly) {
-            $all = array_filter($all, fn($e) => $e->isActive());
+            $all = array_filter($all, function ($e) { return $e->isActive(); });
         }
         self::$entityCache[$key] = array_values($all);
         return self::$entityCache[$key];

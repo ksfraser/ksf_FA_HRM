@@ -6,7 +6,8 @@ namespace ksfraser\FrontAccounting\HRM\Exception;
 
 class ValidationException extends \RuntimeException
 {
-    private array $errors;
+    /** @var array */
+    private $errors;
 
     public function __construct(array $errors, int $code = 0, ?\Throwable $previous = null)
     {

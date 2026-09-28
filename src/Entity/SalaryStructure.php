@@ -6,11 +6,16 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class SalaryStructure
 {
-    private int $structureId;
-    private int $gradeId;
-    private int $elementId;
-    private float $defaultAmount;
-    private bool $isActive;
+    /** @var int */
+    private $structureId;
+    /** @var int */
+    private $gradeId;
+    /** @var int */
+    private $elementId;
+    /** @var float */
+    private $defaultAmount;
+    /** @var bool */
+    private $isActive;
 
     public function __construct(array $data)
     {

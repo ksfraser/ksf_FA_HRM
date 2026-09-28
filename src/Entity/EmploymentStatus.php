@@ -6,10 +6,14 @@ namespace ksfraser\FrontAccounting\HRM\Entity;
 
 class EmploymentStatus
 {
-    private int $statusId;
-    private string $statusCode;
-    private string $statusName;
-    private bool $isActive;
+    /** @var int */
+    private $statusId;
+    /** @var string */
+    private $statusCode;
+    /** @var string */
+    private $statusName;
+    /** @var bool */
+    private $isActive;
 
     public function __construct(array $data)
     {

@@ -13,7 +13,7 @@ class LookupRepository
     public function getEmploymentStatuses(): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_employment_status ORDER BY status_name";
-        return array_map(fn($r) => new EmploymentStatus($r), $this->dbFetchAll($this->dbQuery($sql)));
+        return array_map(function ($r) { return new EmploymentStatus($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
     public function getLeaveTypes(): array
