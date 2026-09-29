@@ -152,6 +152,20 @@ class BenefitsService
         self::invalidateAllCaches();
     }
 
+    /**
+     * Update a benefit catalogue row.
+     *
+     * @param int   $id   benefit_id
+     * @param array $data Field values
+     *
+     * @since 1.0.0
+     */
+    public function update(int $id, array $data): void
+    {
+        $this->benefitRepo->update($id, $data);
+        self::invalidateAllCaches();
+    }
+
     public static function invalidateAllCaches(): void
     {
         self::$entityCache = null;

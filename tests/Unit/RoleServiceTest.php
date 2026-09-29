@@ -209,6 +209,21 @@ class RoleServiceTest extends TestCase
         $this->assertNull(RoleService::getOptionCacheState());
     }
 
+    public function testDeactivateIssuesSoftDeleteAndInvalidatesCache(): void
+    {
+        $this->service->getEntities();
+        $this->service->getHtmlOptions();
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->deactivate(2);
+        $sql = (string) $GLOBALS['__fa_last_sql'];
+        $this->assertStringContainsString('UPDATE', $sql);
+        $this->assertStringContainsString('0_hrm_roles', $sql);
+        $this->assertStringContainsString('is_active = 0', $sql);
+        $this->assertStringContainsString('role_id = 2', $sql);
+        $this->assertStringNotContainsString('DELETE', $sql);
+        $this->assertNull(RoleService::getOptionCacheState());
+    }
+
     // ─── Hook Response Methods ──────────────────────────────────────
 
     public function testHookGetRolesReturnsArrays(): void

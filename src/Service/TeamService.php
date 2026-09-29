@@ -165,6 +165,19 @@ class TeamService
         self::invalidateAllCaches();
     }
 
+    /**
+     * Soft-delete: clear is_active, keeping positions that reference this row.
+     *
+     * @param int $id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $this->repo->deactivate($id);
+        self::invalidateAllCaches();
+    }
+
     public static function invalidateAllCaches(): void
     {
         self::$entityCache = null;

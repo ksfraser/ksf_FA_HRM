@@ -285,14 +285,27 @@ To add DDL caching for a new entity (e.g. "Grade"):
        ├── getGradeDDL(&$data, $opts) → delegate to service
        └── getGradeHtmlOptions(&$data, $opts) → delegate to service
 
-5. Admin page
-   └── pages/grades.php
-       ├── hook_invoke for FK DDLs (if any)
-       ├── $service->listAll() for table
-       ├── form with entity fields
-       └── JS: toggle form, data-required validation
+5. Tab controller (owns the whole tab)
+   └── src/Controller/GradesTabController.php extends AbstractTabController
+       ├── getPkField(): 'grade_id'
+       ├── getFieldMetadata(): entity/table/pk/fields/fk_ddls/tableSettings
+       ├── fkOptions(): department_id => value => label map
+       ├── listRows() / countRows(): service->listAll(), paged
+       ├── findRecord($pk): service->getById()
+       ├── createRecord($data) / updateRecord($pk, $data) / deleteRecord($pk)
+       ├── getActionLabels(): edit => Edit, delete => Deactivate
+       └── getDeleteConfirmMessage()
 
-6. Tests
+   The controller renders the summary table above an always-visible entry
+   form. There is no page script and no add link: dispatch() runs the
+   controller and returns, so pages/grades.php no longer exists.
+
+6. Shell registration
+   └── src/App/HrmAppShell.php registerCoreTabs()
+       └── ['key' => 'grades', ...] with GradesTabController::class and
+           pageFile null (controller-owned tab, no fall-through)
+
+7. Tests
    └── tests/Unit/GradeServiceTest.php
        ├── test cache layers
        ├── test hook responses

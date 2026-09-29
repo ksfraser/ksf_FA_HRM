@@ -62,6 +62,18 @@ class PositionService
         return $this->positionRepo->findActive();
     }
 
+    /**
+     * Every position including deactivated ones, for the tab summary table.
+     *
+     * @return array<int, Position>
+     *
+     * @since 1.0.0
+     */
+    public function listAllIncludingInactive(): array
+    {
+        return $this->positionRepo->findAll();
+    }
+
     public function getById(int $id): array
     {
         $entity = $this->positionRepo->findById($id);
@@ -144,6 +156,19 @@ class PositionService
     public function update(int $id, array $data): void
     {
         $this->positionRepo->update($id, $data);
+        self::invalidateAllCaches();
+    }
+
+    /**
+     * Soft-delete a position: clear is_active, keeping its FK assignments.
+     *
+     * @param int $id position_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $this->positionRepo->deactivate($id);
         self::invalidateAllCaches();
     }
 

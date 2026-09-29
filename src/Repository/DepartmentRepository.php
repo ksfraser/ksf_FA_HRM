@@ -64,4 +64,20 @@ class DepartmentRepository
         $sql = "DELETE FROM " . TB_PREF . "hrm_departments WHERE department_id = " . $this->intVal($id);
         $this->dbQuery($sql);
     }
+
+    /**
+     * Soft-delete: clear is_active only.
+     *
+     * Referenced by hrm_positions/hrm_teams/hrm_roles.department_id, so the
+     * tab's row action uses deactivate() rather than delete().
+     *
+     * @param int $id department_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $sql = "UPDATE " . TB_PREF . "hrm_departments SET is_active = 0 WHERE department_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
 }

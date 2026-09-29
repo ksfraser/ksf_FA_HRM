@@ -259,6 +259,23 @@ class TeamServiceTest extends TestCase
         $this->assertNull(TeamService::getOptionCacheState());
     }
 
+    public function testDeactivateIssuesSoftDeleteAndInvalidatesCache(): void
+    {
+        $this->service->getEntities();
+        $this->service->getHtmlOptions();
+        $this->assertNotNull(TeamService::getOptionCacheState());
+
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->deactivate(2);
+        $sql = (string) $GLOBALS['__fa_last_sql'];
+        $this->assertStringContainsString('UPDATE', $sql);
+        $this->assertStringContainsString('0_hrm_teams', $sql);
+        $this->assertStringContainsString('is_active = 0', $sql);
+        $this->assertStringContainsString('team_id = 2', $sql);
+        $this->assertStringNotContainsString('DELETE', $sql);
+        $this->assertNull(TeamService::getOptionCacheState());
+    }
+
     // ─── Hook Response Methods ──────────────────────────────────────
 
     public function testHookGetTeamsReturnsArrays(): void

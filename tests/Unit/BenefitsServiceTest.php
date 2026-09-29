@@ -212,6 +212,28 @@ class BenefitsServiceTest extends TestCase
         $this->assertNull(BenefitsService::getOptionCacheState());
     }
 
+    public function testUpdateWritesOnlySuppliedFieldsAndInvalidatesCache(): void
+    {
+        $this->service->getEntities();
+        $this->service->getHtmlOptions();
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->update(3, ['benefit_name' => 'Dental Plus']);
+        $sql = (string) $GLOBALS['__fa_last_sql'];
+        $this->assertStringContainsString('UPDATE', $sql);
+        $this->assertStringContainsString('0_hrm_benefits', $sql);
+        $this->assertStringContainsString('benefit_name', $sql);
+        $this->assertStringContainsString('benefit_id = 3', $sql);
+        $this->assertStringNotContainsString('benefit_code', $sql);
+        $this->assertNull(BenefitsService::getOptionCacheState());
+    }
+
+    public function testUpdateWithNoKnownFieldsIsNoop(): void
+    {
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->update(3, ['unknown_col' => 'x']);
+        $this->assertStringNotContainsString('UPDATE', (string) $GLOBALS['__fa_last_sql']);
+    }
+
     // ─── Hook Response Methods ──────────────────────────────────────
 
     public function testHookGetBenefitsReturnsArrays(): void

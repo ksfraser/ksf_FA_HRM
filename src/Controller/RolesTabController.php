@@ -6,30 +6,33 @@ namespace ksfraser\FrontAccounting\HRM\Controller;
 
 use ksfraser\FrontAccounting\Common\App\AbstractTabController;
 use ksfraser\FrontAccounting\HRM\Service\DepartmentService;
+use ksfraser\FrontAccounting\HRM\Service\RoleService;
 
 /**
- * DepartmentsTabController — controller SRP for the HRM Departments tab.
+ * RolesTabController — controller SRP for the HRM Roles tab.
  *
- * Coordinates the page flow for the Departments view: routes save/update/
- * delete, then renders the SUMMARY UI SRP (MasterSummaryTable) above and the
- * ENTRY-FORM UI SRP (FieldForm) below — matching the FA items.php "Sales
- * Pricing" layout contract from AbstractTabController.
+ * This tab was previously unreachable: pages/roles.php existed with the
+ * add-link + table layout but was never registered in HrmAppShell, so
+ * dispatch() had no tab to resolve and the page could never render. The tab
+ * is now registered and controller-backed.
  *
- * Data access is delegated to the DI'd DepartmentService (DAO-backed). Field
- * metadata follows the FR-006-007 schema consumed by TableView/FieldForm.
+ * Row delete is a soft delete via RoleService::deactivate().
  *
  * PHP 7.3 compatible.
  *
  * @package ksf_FA_HRM
  * @since   1.0.0
  *
- * @UML Note: APP_TAB_ARCHITECTURE.md §2/§10 (controller SRP + UI SRPs)
- * @BABOK Related: FR-HRM-001, FR-006-007
+ * @UML Note: APP_TAB_ARCHITECTURE.md §2/§10
+ * @BABOK Related: FR-HRM-001
  */
-class DepartmentsTabController extends AbstractTabController
+class RolesTabController extends AbstractTabController
 {
-    /** @var DepartmentService */
+    /** @var RoleService */
     private $service;
+
+    /** @var DepartmentService */
+    private $departmentService;
 
     /**
      * @param \Ksfraser\Frontaccounting\HTML\TabContext|null $context DI request state
@@ -40,61 +43,60 @@ class DepartmentsTabController extends AbstractTabController
     public function __construct($context = null, array $options = [])
     {
         parent::__construct($context, $options);
-        $this->service = new DepartmentService();
+        $this->service = new RoleService();
+        $this->departmentService = new DepartmentService();
     }
 
     /** {@inheritDoc} */
     protected function getPkField(): string
     {
-        return 'department_id';
+        return 'role_id';
     }
 
     /** {@inheritDoc} */
     protected function getFieldMetadata(): array
     {
         return [
-            'entity'      => 'department',
-            'table'       => TB_PREF . 'hrm_departments',
-            'label'       => 'Department',
-            'labelPlural' => 'Departments',
-            'hookPrefix'  => 'department',
-            'pk'          => 'department_id',
+            'entity'      => 'role',
+            'table'       => TB_PREF . 'hrm_roles',
+            'label'       => 'Role',
+            'labelPlural' => 'Roles',
+            'hookPrefix'  => 'role',
+            'pk'          => 'role_id',
             'fields'      => [
-                'department_id' => [
+                'role_id' => [
                     'label' => 'ID',
-                    'type' => 'text',
+                    'type'  => 'text',
                     'showInForm' => false,
-                    'showInTable' => true,
+                    'showInTable' => false,
                 ],
-                'department_code' => [
-                    'label' => 'Code',
-                    'type' => 'text',
-                    'required' => true,
-                    'max' => 20,
-                    'showInTable' => true,
-                    'showInForm' => true,
-                    'colClass' => 'col-md-2',
-                ],
-                'department_name' => [
+                'role_name' => [
                     'label' => 'Name',
-                    'type' => 'text',
+                    'type'  => 'text',
                     'required' => true,
                     'max' => 100,
                     'showInTable' => true,
                     'showInForm' => true,
                     'colClass' => 'col-md-4',
                 ],
-                'description' => [
-                    'label' => 'Description',
-                    'type' => 'textarea',
-                    'rows' => 2,
+                'department_id' => [
+                    'label' => 'Department',
+                    'type'  => 'select',
                     'showInTable' => true,
                     'showInForm' => true,
-                    'colClass' => 'col-md-6',
+                    'colClass' => 'col-md-4',
+                ],
+                'description' => [
+                    'label' => 'Description',
+                    'type'  => 'textarea',
+                    'rows' => 2,
+                    'showInTable' => false,
+                    'showInForm' => true,
+                    'colClass' => 'col-md-8',
                 ],
                 'is_active' => [
                     'label' => 'Active',
-                    'type' => 'checkbox',
+                    'type'  => 'checkbox',
                     'default' => 1,
                     'showInTable' => true,
                     'showInForm' => true,
@@ -103,8 +105,25 @@ class DepartmentsTabController extends AbstractTabController
             ],
             'fk_ddls'   => [],
             'ddlHooks'  => [],
-            'tableSettings' => ['orderBy' => 'department_code ASC'],
+            'tableSettings' => ['orderBy' => 'role_name ASC'],
         ];
+    }
+
+    /**
+     * Department select. Service getHtmlOptions() returns HtmlOption[] objects;
+     * FieldForm wants a plain value => label map.
+     *
+     * @return array<string, array<string, string>>
+     */
+    protected function fkOptions(): array
+    {
+        $map = [];
+        foreach ($this->departmentService->getHtmlOptions(true, $this->localise('All')) as $option) {
+            if (is_object($option) && method_exists($option, 'getValue')) {
+                $map[(string) $option->getValue()] = (string) $option->getLabel();
+            }
+        }
+        return ['department_id' => $map];
     }
 
     /** {@inheritDoc} */
@@ -112,8 +131,8 @@ class DepartmentsTabController extends AbstractTabController
     {
         $rows = [];
         $offset = ($page - 1) * $perPage;
-        foreach (array_slice($this->service->getDepartments(false), $offset, $perPage) as $department) {
-            $rows[] = $department->toArray();
+        foreach (array_slice($this->service->listAll(), $offset, $perPage) as $role) {
+            $rows[] = $role->toArray();
         }
         return $rows;
     }
@@ -121,14 +140,13 @@ class DepartmentsTabController extends AbstractTabController
     /** {@inheritDoc} */
     protected function countRows(): int
     {
-        return count($this->service->getDepartments(false));
+        return count($this->service->listAll());
     }
 
     /** {@inheritDoc} */
     protected function findRecord(string $pk): ?array
     {
-        $department = $this->service->getById((int) $pk);
-        return $department !== null ? $department->toArray() : null;
+        return $this->service->getById((int) $pk);
     }
 
     /** {@inheritDoc} */
@@ -161,6 +179,6 @@ class DepartmentsTabController extends AbstractTabController
     /** {@inheritDoc} */
     protected function getDeleteConfirmMessage(): string
     {
-        return $this->localise('Deactivate this department? Positions, teams and roles keep their department.');
+        return $this->localise('Deactivate this role? Positions assigned to it keep their role.');
     }
 }

@@ -291,6 +291,21 @@ class DepartmentService
     }
 
     /**
+     * Soft-delete a department and invalidate all caches.
+     *
+     * Departments are referenced by positions, teams and roles, so the tab's
+     * row action clears is_active rather than removing the row.
+     *
+     * @param int $id Department ID
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $this->repo->deactivate($id);
+        self::invalidateAllCaches();
+    }
+
+    /**
      * Invalidate all caches (entity + DDL trait caches).
      *
      * @since 1.0.0

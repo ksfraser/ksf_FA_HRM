@@ -36,6 +36,52 @@ class LookupRepository
         return $this->dbInsertId();
     }
 
+    /**
+     * Update an existing leave type.
+     *
+     * @param int   $id   leave_type_id
+     * @param array $data Field values; only the keys present are written
+     *
+     * @since 1.0.0
+     */
+    public function updateLeaveType(int $id, array $data): void
+    {
+        $sets = [];
+        foreach (['type_code', 'type_name'] as $field) {
+            if (isset($data[$field])) {
+                $sets[] = "`$field` = " . $this->escape($data[$field]);
+            }
+        }
+        if (isset($data['default_days'])) {
+            $sets[] = "`default_days` = " . $this->floatVal($data['default_days']);
+        }
+        foreach (['is_paid', 'is_active'] as $flag) {
+            if (isset($data[$flag])) {
+                $sets[] = "`$flag` = " . ($data[$flag] ? 1 : 0);
+            }
+        }
+        if (empty($sets)) {
+            return;
+        }
+        $sql = "UPDATE " . TB_PREF . "leave_types SET " . implode(', ', $sets) .
+            " WHERE leave_type_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
+
+    /**
+     * Soft-delete a leave type: clear is_active only, so historic leave
+     * requests keep resolving their type_name via the join in leave.php.
+     *
+     * @param int $id leave_type_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivateLeaveType(int $id): void
+    {
+        $sql = "UPDATE " . TB_PREF . "leave_types SET is_active = 0 WHERE leave_type_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
+
     public function getCrmPersons(): array
     {
         $sql = "SELECT id, name FROM " . TB_PREF . "crm_persons ORDER BY name";

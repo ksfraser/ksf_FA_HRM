@@ -88,4 +88,20 @@ class TeamRepository
         $sql = "DELETE FROM " . TB_PREF . "hrm_teams WHERE team_id = " . $this->intVal($id);
         $this->dbQuery($sql);
     }
+
+    /**
+     * Soft-delete: clear is_active only.
+     *
+     * Referenced by hrm_positions.team_id and by hrm_teams.parent_team_id, so
+     * the tab's row action uses deactivate() rather than delete().
+     *
+     * @param int $id team_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $sql = "UPDATE " . TB_PREF . "hrm_teams SET is_active = 0 WHERE team_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
 }

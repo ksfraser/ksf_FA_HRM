@@ -84,4 +84,21 @@ class RoleRepository
         $sql = "DELETE FROM " . TB_PREF . "hrm_roles WHERE role_id = " . $this->intVal($id);
         $this->dbQuery($sql);
     }
+
+    /**
+     * Soft-delete: clear is_active only.
+     *
+     * hrm_positions.role_id references this table, so the tab's row action
+     * uses deactivate() rather than delete() and existing positions keep
+     * resolving their role.
+     *
+     * @param int $id role_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $sql = "UPDATE " . TB_PREF . "hrm_roles SET is_active = 0 WHERE role_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
 }

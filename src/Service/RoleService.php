@@ -149,6 +149,19 @@ class RoleService
         self::invalidateAllCaches();
     }
 
+    /**
+     * Soft-delete: clear is_active, keeping positions that reference this row.
+     *
+     * @param int $id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $this->roleRepo->deactivate($id);
+        self::invalidateAllCaches();
+    }
+
     public static function invalidateAllCaches(): void
     {
         self::$entityCache = null;

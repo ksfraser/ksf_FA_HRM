@@ -208,6 +208,45 @@ class PositionServiceTest extends TestCase
         $this->assertNull(PositionService::getOptionCacheState());
     }
 
+    public function testDeactivateIssuesSoftDeleteWithoutTouchingTeam(): void
+    {
+        $this->service->getEntities();
+        $this->service->getHtmlOptions();
+
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->deactivate(2);
+        $sql = (string) $GLOBALS['__fa_last_sql'];
+        $this->assertStringContainsString('UPDATE', $sql);
+        $this->assertStringContainsString('0_hrm_positions', $sql);
+        $this->assertStringContainsString('is_active = 0', $sql);
+        $this->assertStringContainsString('position_id = 2', $sql);
+        $this->assertStringNotContainsString('team_id', $sql);
+        $this->assertNull(PositionService::getOptionCacheState());
+    }
+
+    public function testListAllIncludingInactiveQueriesUnfiltered(): void
+    {
+        $GLOBALS['__fa_select_queue'] = [[
+            [
+                'position_id' => 1, 'position_code' => 'IT-DEV-001',
+                'department_id' => 1, 'team_id' => 1, 'role_id' => 1,
+                'position_number' => 1, 'description' => null, 'is_active' => 1,
+                'created_at' => '2024-01-01 00:00:00', 'updated_at' => '2024-01-01 00:00:00',
+                'department_code' => 'IT', 'team_code' => 'IT-DEV', 'role_name' => 'Developer',
+            ],
+            [
+                'position_id' => 2, 'position_code' => 'IT-OPS-001',
+                'department_id' => 1, 'team_id' => 2, 'role_id' => 2,
+                'position_number' => 1, 'description' => null, 'is_active' => 0,
+                'created_at' => '2024-01-01 00:00:00', 'updated_at' => '2024-01-01 00:00:00',
+                'department_code' => 'IT', 'team_code' => 'IT-OPS', 'role_name' => 'Manager',
+            ],
+        ]];
+        $all = $this->service->listAllIncludingInactive();
+        $this->assertCount(2, $all);
+        $this->assertStringNotContainsString('is_active = 1', (string) $GLOBALS['__fa_last_sql']);
+    }
+
     // ─── Hook Response Methods ──────────────────────────────────────
 
     public function testHookGetPositionsReturnsArrays(): void

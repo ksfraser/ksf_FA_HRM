@@ -400,6 +400,23 @@ class DepartmentServiceTest extends TestCase
         $this->assertNull(DepartmentService::getOptionCacheState());
     }
 
+    public function testDeactivateIssuesSoftDeleteAndInvalidatesCache(): void
+    {
+        $this->service->getDepartments();
+        $this->service->getHtmlOptions();
+        $this->assertNotNull(DepartmentService::getOptionCacheState());
+
+        $GLOBALS['__fa_last_sql'] = '';
+        $this->service->deactivate(2);
+        $sql = (string) $GLOBALS['__fa_last_sql'];
+        $this->assertStringContainsString('UPDATE', $sql);
+        $this->assertStringContainsString('0_hrm_departments', $sql);
+        $this->assertStringContainsString('is_active = 0', $sql);
+        $this->assertStringContainsString('department_id = 2', $sql);
+        $this->assertStringNotContainsString('DELETE', $sql);
+        $this->assertNull(DepartmentService::getOptionCacheState());
+    }
+
     // ─── Hook Response Methods ──────────────────────────────────────
 
     public function testHookGetDepartmentsReturnsArrays(): void

@@ -37,6 +37,23 @@ class PositionRepository
         return array_map(function ($r) { return new Position($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
+    /**
+     * Every position regardless of is_active.
+     *
+     * Needed by the Positions tab summary table, which must keep showing
+     * deactivated rows (otherwise a soft-deleted position vanishes and the
+     * user cannot reactivate it).
+     *
+     * @return Position[]
+     *
+     * @since 1.0.0
+     */
+    public function findAll(): array
+    {
+        $sql = $this->baseSql . " ORDER BY p.position_code";
+        return array_map(function ($r) { return new Position($r); }, $this->dbFetchAll($this->dbQuery($sql)));
+    }
+
     public function generatePositionCode(int $departmentId, ?int $teamId): string
     {
         $deptRow = $this->dbFetchAssoc($this->dbQuery(
@@ -89,6 +106,23 @@ class PositionRepository
         if (empty($sets)) return;
         $sql = "UPDATE " . TB_PREF . "hrm_positions SET " . implode(', ', $sets) .
             " WHERE position_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
+
+    /**
+     * Soft-delete: clear is_active only.
+     *
+     * Deliberately not routed through update() — update() writes `team_id`
+     * unconditionally, so a soft-delete via ['is_active' => 0] would also null
+     * out the position's team assignment.
+     *
+     * @param int $id position_id
+     *
+     * @since 1.0.0
+     */
+    public function deactivate(int $id): void
+    {
+        $sql = "UPDATE " . TB_PREF . "hrm_positions SET is_active = 0 WHERE position_id = " . $this->intVal($id);
         $this->dbQuery($sql);
     }
 }

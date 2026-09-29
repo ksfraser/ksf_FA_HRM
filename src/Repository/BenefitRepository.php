@@ -59,6 +59,43 @@ class BenefitRepository
         $this->dbQuery($sql);
     }
 
+    /**
+     * Update an existing benefit catalogue row.
+     *
+     * Only the keys present in $data are written, so a partial update (e.g.
+     * just clearing is_active) does not blank the other columns.
+     *
+     * @param int   $id   benefit_id
+     * @param array $data Field values
+     *
+     * @since 1.0.0
+     */
+    public function update(int $id, array $data): void
+    {
+        $sets = [];
+        foreach (['benefit_name', 'benefit_code', 'benefit_type', 'calculation_period', 'gl_code_expense', 'gl_code_liability', 'provider', 'description'] as $field) {
+            if (isset($data[$field])) {
+                $sets[] = "`$field` = " . $this->escape($data[$field]);
+            }
+        }
+        foreach (['employer_rate', 'employee_rate', 'fixed_amount'] as $field) {
+            if (isset($data[$field])) {
+                $sets[] = "`$field` = " . $this->floatVal($data[$field]);
+            }
+        }
+        foreach (['is_percentage_based', 'is_mandatory', 'is_tax_deductible', 'is_active'] as $flag) {
+            if (isset($data[$flag])) {
+                $sets[] = "`$flag` = " . ($data[$flag] ? 1 : 0);
+            }
+        }
+        if (empty($sets)) {
+            return;
+        }
+        $sql = "UPDATE " . TB_PREF . "hrm_benefits SET " . implode(', ', $sets) .
+            " WHERE benefit_id = " . $this->intVal($id);
+        $this->dbQuery($sql);
+    }
+
     public function findEmployeeBenefits(int $personId): array
     {
         $sql = "SELECT eb.*, b.benefit_name, b.benefit_type, b.is_mandatory

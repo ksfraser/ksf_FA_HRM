@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace ksfraser\FrontAccounting\HRM\Controller;
 
 use ksfraser\FrontAccounting\Common\App\AbstractTabController;
-use ksfraser\FrontAccounting\HRM\Service\DepartmentService;
+use ksfraser\FrontAccounting\HRM\Service\GradeService;
 
 /**
- * DepartmentsTabController — controller SRP for the HRM Departments tab.
+ * GradesTabController — controller SRP for the HRM Grades tab.
  *
- * Coordinates the page flow for the Departments view: routes save/update/
- * delete, then renders the SUMMARY UI SRP (MasterSummaryTable) above and the
- * ENTRY-FORM UI SRP (FieldForm) below — matching the FA items.php "Sales
- * Pricing" layout contract from AbstractTabController.
+ * Renders the SUMMARY UI SRP (MasterSummaryTable) above and the ENTRY-FORM UI
+ * SRP (FieldForm) below, matching the FA items.php "Sales Pricing" layout
+ * contract from AbstractTabController. There is no "Add New Grade" link: the
+ * form is always on the page, Edit pre-loads it, and the footer button flips
+ * from Save to Update.
  *
- * Data access is delegated to the DI'd DepartmentService (DAO-backed). Field
- * metadata follows the FR-006-007 schema consumed by TableView/FieldForm.
+ * Row delete is a soft delete via GradeService::deactivate() — a grade can be
+ * referenced by existing employees, so the row is deactivated rather than
+ * removed.
  *
  * PHP 7.3 compatible.
  *
@@ -24,11 +26,11 @@ use ksfraser\FrontAccounting\HRM\Service\DepartmentService;
  * @since   1.0.0
  *
  * @UML Note: APP_TAB_ARCHITECTURE.md §2/§10 (controller SRP + UI SRPs)
- * @BABOK Related: FR-HRM-001, FR-006-007
+ * @BABOK Related: FR-HRM-001
  */
-class DepartmentsTabController extends AbstractTabController
+class GradesTabController extends AbstractTabController
 {
-    /** @var DepartmentService */
+    /** @var GradeService */
     private $service;
 
     /**
@@ -40,61 +42,81 @@ class DepartmentsTabController extends AbstractTabController
     public function __construct($context = null, array $options = [])
     {
         parent::__construct($context, $options);
-        $this->service = new DepartmentService();
+        $this->service = new GradeService();
     }
 
     /** {@inheritDoc} */
     protected function getPkField(): string
     {
-        return 'department_id';
+        return 'grade_id';
     }
 
     /** {@inheritDoc} */
     protected function getFieldMetadata(): array
     {
         return [
-            'entity'      => 'department',
-            'table'       => TB_PREF . 'hrm_departments',
-            'label'       => 'Department',
-            'labelPlural' => 'Departments',
-            'hookPrefix'  => 'department',
-            'pk'          => 'department_id',
+            'entity'      => 'grade',
+            'table'       => TB_PREF . 'hrm_grades',
+            'label'       => 'Grade',
+            'labelPlural' => 'Grades',
+            'hookPrefix'  => 'grade',
+            'pk'          => 'grade_id',
             'fields'      => [
-                'department_id' => [
+                'grade_id' => [
                     'label' => 'ID',
-                    'type' => 'text',
+                    'type'  => 'text',
                     'showInForm' => false,
-                    'showInTable' => true,
+                    'showInTable' => false,
                 ],
-                'department_code' => [
+                'grade_code' => [
                     'label' => 'Code',
-                    'type' => 'text',
+                    'type'  => 'text',
                     'required' => true,
                     'max' => 20,
                     'showInTable' => true,
                     'showInForm' => true,
                     'colClass' => 'col-md-2',
                 ],
-                'department_name' => [
+                'grade_name' => [
                     'label' => 'Name',
-                    'type' => 'text',
+                    'type'  => 'text',
                     'required' => true,
                     'max' => 100,
                     'showInTable' => true,
                     'showInForm' => true,
-                    'colClass' => 'col-md-4',
+                    'colClass' => 'col-md-3',
+                ],
+                'min_salary' => [
+                    'label' => 'Min Salary',
+                    'type'  => 'number',
+                    'step' => '0.01',
+                    'min'  => '0',
+                    'default' => 0,
+                    'showInTable' => true,
+                    'showInForm' => true,
+                    'colClass' => 'col-md-2',
+                ],
+                'max_salary' => [
+                    'label' => 'Max Salary',
+                    'type'  => 'number',
+                    'step' => '0.01',
+                    'min'  => '0',
+                    'default' => 0,
+                    'showInTable' => true,
+                    'showInForm' => true,
+                    'colClass' => 'col-md-2',
                 ],
                 'description' => [
                     'label' => 'Description',
-                    'type' => 'textarea',
+                    'type'  => 'textarea',
                     'rows' => 2,
-                    'showInTable' => true,
+                    'showInTable' => false,
                     'showInForm' => true,
-                    'colClass' => 'col-md-6',
+                    'colClass' => 'col-md-8',
                 ],
                 'is_active' => [
                     'label' => 'Active',
-                    'type' => 'checkbox',
+                    'type'  => 'checkbox',
                     'default' => 1,
                     'showInTable' => true,
                     'showInForm' => true,
@@ -103,7 +125,7 @@ class DepartmentsTabController extends AbstractTabController
             ],
             'fk_ddls'   => [],
             'ddlHooks'  => [],
-            'tableSettings' => ['orderBy' => 'department_code ASC'],
+            'tableSettings' => ['orderBy' => 'grade_name ASC'],
         ];
     }
 
@@ -112,8 +134,8 @@ class DepartmentsTabController extends AbstractTabController
     {
         $rows = [];
         $offset = ($page - 1) * $perPage;
-        foreach (array_slice($this->service->getDepartments(false), $offset, $perPage) as $department) {
-            $rows[] = $department->toArray();
+        foreach (array_slice($this->service->listAll(), $offset, $perPage) as $grade) {
+            $rows[] = $grade->toArray();
         }
         return $rows;
     }
@@ -121,14 +143,14 @@ class DepartmentsTabController extends AbstractTabController
     /** {@inheritDoc} */
     protected function countRows(): int
     {
-        return count($this->service->getDepartments(false));
+        return count($this->service->listAll());
     }
 
     /** {@inheritDoc} */
     protected function findRecord(string $pk): ?array
     {
-        $department = $this->service->getById((int) $pk);
-        return $department !== null ? $department->toArray() : null;
+        $grade = $this->service->getById((int) $pk);
+        return empty($grade) ? null : $grade;
     }
 
     /** {@inheritDoc} */
@@ -161,6 +183,6 @@ class DepartmentsTabController extends AbstractTabController
     /** {@inheritDoc} */
     protected function getDeleteConfirmMessage(): string
     {
-        return $this->localise('Deactivate this department? Positions, teams and roles keep their department.');
+        return $this->localise('Deactivate this grade? Employees already assigned to it keep their grade.');
     }
 }
