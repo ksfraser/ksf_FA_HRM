@@ -95,6 +95,30 @@ class DepartmentService
     }
 
     /**
+     * Active departments as a plain id => label map.
+     *
+     * getHtmlOptions() returns HtmlOption objects for the jsfraser/html
+     * renderer; FA's array_selector_row() wants a value => label array
+     * instead, which is what the module's filter dropdowns use.
+     *
+     * @param bool $activeOnly Filter to active departments only (default: true)
+     * @return array<int,string>
+     * @since 1.0.0
+     */
+    public function optionsFor(bool $activeOnly = true): array
+    {
+        $out = [];
+        foreach ($this->getDepartments($activeOnly) as $dept) {
+            $code = $dept->getDepartmentCode();
+            $name = $dept->getDepartmentName();
+            $out[(int) $dept->getDepartmentId()] = ($code !== null && $code !== '')
+                ? $code . ' - ' . $name
+                : $name;
+        }
+        return $out;
+    }
+
+    /**
      * Get a single department by ID (not cached — infrequent).
      *
      * @param int $id Department ID

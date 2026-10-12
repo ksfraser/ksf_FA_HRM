@@ -24,17 +24,20 @@ class LookupRepositoryTest extends TestCase
     protected function setUp(): void
     {
         $GLOBALS['__fa_last_sql'] = '';
+        $GLOBALS['__fa_table_exists'] = true;
         unset($GLOBALS['__fa_select_queue'], $GLOBALS['__fa_current_result']);
         $this->repo = new LookupRepository();
     }
 
     protected function tearDown(): void
     {
-        unset($GLOBALS['__fa_select_queue'], $GLOBALS['__fa_current_result'], $GLOBALS['__fa_last_sql']);
+        unset($GLOBALS['__fa_select_queue'], $GLOBALS['__fa_current_result'],
+              $GLOBALS['__fa_last_sql'], $GLOBALS['__fa_table_exists']);
     }
 
     public function testGetLeaveTypesReturnsAllRowsUnfiltered(): void
     {
+        $GLOBALS['__fa_table_exists'] = true;
         $GLOBALS['__fa_select_queue'] = [[
             ['leave_type_id' => 1, 'type_code' => 'ANN', 'type_name' => 'Annual', 'default_days' => 20, 'is_paid' => 1, 'is_active' => 1],
             ['leave_type_id' => 2, 'type_code' => 'OLD', 'type_name' => 'Retired', 'default_days' => 5, 'is_paid' => 0, 'is_active' => 0],
@@ -42,6 +45,25 @@ class LookupRepositoryTest extends TestCase
         $rows = $this->repo->getLeaveTypes();
         $this->assertCount(2, $rows);
         $this->assertStringNotContainsString('is_active = 1', (string) $GLOBALS['__fa_last_sql']);
+    }
+
+    /**
+     * 0_leave_types is owned by ksf_FA_Leave, which is not part of the
+     * ksf_FA_HRM install. Reading it unconditionally makes MariaDB reject the
+     * query, so the catalogue read must degrade to an empty list.
+     *
+     * @since 1.0.0
+     */
+    public function testGetLeaveTypesReturnsEmptyWhenCatalogueTableIsAbsent(): void
+    {
+        $GLOBALS['__fa_table_exists'] = false;
+        $GLOBALS['__fa_select_queue'] = [[
+            ['leave_type_id' => 1, 'type_code' => 'ANN', 'type_name' => 'Annual'],
+        ]];
+        $rows = $this->repo->getLeaveTypes();
+        $this->assertSame([], $rows);
+        // The catalogue SELECT must not even be attempted.
+        $this->assertStringNotContainsString('FROM 0_leave_types', (string) $GLOBALS['__fa_last_sql']);
     }
 
     public function testUpdateLeaveTypeWritesOnlySuppliedFields(): void

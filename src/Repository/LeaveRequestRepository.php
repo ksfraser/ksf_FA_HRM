@@ -51,14 +51,14 @@ class LeaveRequestRepository
 
     public function updateState(int $requestId, string $state, ?int $currentApproverId = null, ?string $days = null): void
     {
-        $sets = ["state = '" . $this->escape($state) . "'"];
+        $sets = ["state = " . $this->escape($state)];
         if ($currentApproverId !== null) {
             $sets[] = "current_approver_id = " . $this->intVal($currentApproverId);
         }
         if ($days !== null) {
             $sets[] = "days = " . $this->floatVal($days);
         }
-        $sets[] = "updated_at = '" . $this->escape(date('Y-m-d H:i:s')) . "'";
+        $sets[] = "updated_at = " . $this->escape(date('Y-m-d H:i:s'));
         $sql = "UPDATE " . TB_PREF . "hrm_leave_requests SET " . implode(', ', $sets) .
             " WHERE request_id = " . $this->intVal($requestId);
         $this->dbQuery($sql);
@@ -73,7 +73,7 @@ class LeaveRequestRepository
             LEFT JOIN " . TB_PREF . "crm_persons c ON r.person_id = c.id
             WHERE r.person_id = " . $this->intVal($personId);
         if ($state !== '') {
-            $sql .= " AND r.state = '" . $this->escape($state) . "'";
+            $sql .= " AND r.state = " . $this->escape($state);
         }
         $sql .= " ORDER BY r.from_date DESC";
         return $this->dbFetchAll($this->dbQuery($sql));
@@ -97,8 +97,8 @@ class LeaveRequestRepository
             FROM " . TB_PREF . "hrm_leave_requests r
             LEFT JOIN " . TB_PREF . "crm_persons c ON r.person_id = c.id
             WHERE r.state IN ('approved','scheduled')
-              AND r.from_date <= '" . $this->escape($toDate) . "'
-              AND r.to_date >= '" . $this->escape($fromDate) . "'
+              AND r.from_date <= " . $this->escape($toDate) . "
+              AND r.to_date >= " . $this->escape($fromDate) . "
             ORDER BY r.from_date ASC";
         return $this->dbFetchAll($this->dbQuery($sql));
     }
@@ -123,8 +123,8 @@ class LeaveRequestRepository
     {
         $sql = "INSERT INTO " . TB_PREF . "hrm_leave_request_days
             (request_id, date, consumed, created_at)
-            VALUES (" . $this->intVal($requestId) . ", '" . $this->escape($date) . "', " .
-            $this->floatVal($consumed) . ", '" . $this->escape(date('Y-m-d H:i:s')) . "')";
+            VALUES (" . $this->intVal($requestId) . ", " . $this->escape($date) . ", " .
+            $this->floatVal($consumed) . ", " . $this->escape(date('Y-m-d H:i:s')) . ")";
         $this->dbQuery($sql);
     }
 

@@ -33,6 +33,15 @@ namespace {
         {
             $GLOBALS['__fa_last_sql'] = $sql;
             $prefix = strtolower(substr(ltrim((string)$sql), 0, 6));
+            // Schema existence probes answer from __fa_table_exists and must
+            // NOT consume the seeded result queue, or the caller's own SELECT
+            // would find the queue already drained.
+            if (stripos((string)$sql, 'information_schema') !== false) {
+                $GLOBALS['__fa_current_result'] = array(
+                    array('cnt' => empty($GLOBALS['__fa_table_exists']) ? 0 : 1),
+                );
+                return $GLOBALS['__fa_current_result'];
+            }
             if ($prefix === 'select') {
                 if (isset($GLOBALS['__fa_select_queue']) && count($GLOBALS['__fa_select_queue']) > 0) {
                     $GLOBALS['__fa_current_result'] = array_shift($GLOBALS['__fa_select_queue']);

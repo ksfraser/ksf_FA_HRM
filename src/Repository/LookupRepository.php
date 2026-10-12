@@ -16,8 +16,22 @@ class LookupRepository
         return array_map(function ($r) { return new EmploymentStatus($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
+    /**
+     * The leave type catalogue.
+     *
+     * 0_leave_types is documented as ksf_FA_Leave's master and is not created
+     * by the ksf_FA_HRM install, so this returns an empty array rather than
+     * issuing a query MariaDB will reject.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
     public function getLeaveTypes(): array
     {
+        if (!$this->tableExists('leave_types')) {
+            return [];
+        }
         $sql = "SELECT * FROM " . TB_PREF . "leave_types ORDER BY type_name";
         return $this->dbFetchAll($this->dbQuery($sql));
     }
@@ -86,6 +100,24 @@ class LookupRepository
     {
         $sql = "SELECT id, name FROM " . TB_PREF . "crm_persons ORDER BY name";
         return $this->dbFetchAll($this->dbQuery($sql));
+    }
+
+    /**
+     * Active CRM persons as an id => name map, for FA selector dropdowns.
+     *
+     * @return array<int,string>
+     *
+     * @since 1.0.0
+     */
+    public function personOptions(): array
+    {
+        $sql = "SELECT id, name FROM " . TB_PREF . "crm_persons
+            WHERE inactive = 0 ORDER BY name";
+        $out = [];
+        foreach ($this->dbFetchAll($this->dbQuery($sql)) as $row) {
+            $out[(int) $row['id']] = (string) $row['name'];
+        }
+        return $out;
     }
 
     public function getSeparationReasons(): array

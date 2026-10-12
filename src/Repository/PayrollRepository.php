@@ -31,6 +31,69 @@ class PayrollRepository
         return array_map(function ($r) { return new Payroll($r); }, $this->dbFetchAll($this->dbQuery($sql)));
     }
 
+    /**
+     * Filtered read used by the payroll page's list table.
+     *
+     * The page filter (employee / status / pay-period overlap) is pushed down
+     * into SQL rather than filtered in PHP, so the list stays correct once the
+     * payroll history grows beyond one page.
+     *
+     * @param array $filters person_id (int), status (string),
+     *                       from_date / to_date (Y-m-dd, '' = unbounded)
+     *
+     * @return Payroll[]
+     *
+     * @since 1.0.0
+     */
+    public function findFiltered(array $filters = []): array
+    {
+        $where = '';
+        if (!empty($filters['person_id'])) {
+            $where .= " AND p.person_id = " . $this->intVal($filters['person_id']);
+        }
+        if (!empty($filters['status'])) {
+            $where .= " AND p.status = " . $this->escape($filters['status']);
+        }
+        if (!empty($filters['from_date'])) {
+            $d = $this->dateVal($filters['from_date']);
+            if ($d !== '') {
+                $where .= " AND p.pay_period_end >= " . $d;
+            }
+        }
+        if (!empty($filters['to_date'])) {
+            $d = $this->dateVal($filters['to_date']);
+            if ($d !== '') {
+                $where .= " AND p.pay_period_start <= " . $d;
+            }
+        }
+
+        $sql = "SELECT p.*, c.name AS employee_name
+            FROM " . TB_PREF . "hrm_payroll p
+            LEFT JOIN " . TB_PREF . "crm_persons c ON p.person_id = c.id"
+            . ($where === '' ? '' : " WHERE 1 = 1" . $where)
+            . " ORDER BY p.pay_period_start DESC, p.payroll_id DESC";
+
+        return array_map(function ($r) { return new Payroll($r); }, $this->dbFetchAll($this->dbQuery($sql)));
+    }
+
+    /**
+     * Distinct statuses actually present on payroll rows, for the filter combo.
+     *
+     * @return array<int,string> status => label
+     *
+     * @since 1.0.0
+     */
+    public function distinctStatuses(): array
+    {
+        $sql = "SELECT DISTINCT status FROM " . TB_PREF . "hrm_payroll
+            WHERE status IS NOT NULL AND status <> '' ORDER BY status";
+        $out = [];
+        foreach ($this->dbFetchAll($this->dbQuery($sql)) as $row) {
+            $out[(string) $row['status']] = (string) $row['status'];
+        }
+        return $out;
+    }
+
     public function findByPerson(int $personId, int $limit = 12): array
     {
         $sql = "SELECT * FROM " . TB_PREF . "hrm_payroll
