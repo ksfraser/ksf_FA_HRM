@@ -1,168 +1,51 @@
 <?php
 /**
- * HRM — Recruitment.
+ * ksf_FA_HRM — pages/recruitment.php. Deprecated forwarder shim.
  *
- * Layout follows the CRM pattern: filter controls at the top, the list table
- * beneath them, then the data-entry form.
+ * This tab moved into the single front controller ../hrm.php on 2026-10-12.
+ * The page body now lives in src/Controller/RecruitmentTabController.php
+ * and is reached as:
  *
- *   1. Filter  — department and name fragment.
- *   2. List    — candidates.
- *   3. Form    — add a candidate.
+ *     ../hrm.php?page=recruitment
  *
- * STATUS: there is no recruitment data model in this module yet. ksf_FA_HRM's
- * schema owns no vacancy / applicant / application tables, and the tab is
- * registered against SA_HRM_RECRUITMENT but was never backed by one. Rather
- * than render a page whose SQL would be invented against tables that do not
- * exist, the page renders the full FA structure and reports the candidate list
- * as empty. Once 0_hrm_vacancies / 0_hrm_candidates exist, only the three
- * calls into HrmRecruitmentService below need real bodies — the page itself
- * does not change.
+ * This shim exists for one release so existing bookmarks and any hard-coded
+ * links keep resolving. It forwards internally rather than redirecting, so an
+ * in-flight POST keeps its body. Remove it in the next major version.
  *
- * Security area: SA_HRM_RECRUITMENT — defined by
- * hooks_ksf_FA_HRM::install_access() in ../hooks.php
- * (SS_ksf_FA_HRM | 8, "Recruitment").
- *
- * Dual use: reachable directly by URL, and also *included* by ../index.php
- * when HrmAppShell dispatches the recruitment tab.
- *
- * PHP 7.3 compatible.
+ * Security: SA_HRM_RECRUITMENT — now enforced by hrm.php from the tab's registered
+ * security area (see ../hooks.php::install_access).
  *
  * @package ksf_FA_HRM
- * @since   1.0.0
+ * @since   1.1.0 (deprecated — use ../hrm.php?page=recruitment)
  *
- * @UML Note: APP_TAB_ARCHITECTURE.md §10 (page -> service -> repository)
- * @BABOK Related: FR-HRM-001 (recruitment — placeholder)
+ * @deprecated 1.1.0 Forwarder to ../hrm.php?page=recruitment
  */
 
-$hrm_dispatched = defined('HRM_APP_SHELL_DISPATCH');
+// The tab's own security area is resolved and enforced by hrm.php, which reads
+// it from the tab registration before session.inc runs.
 
-if (!$hrm_dispatched) {
-    $page_security = 'SA_HRM_RECRUITMENT';
-    $path_to_root = '../../..';
+$_GET['page'] = 'recruitment';
 
-    include_once($path_to_root . '/includes/session.inc');
-    add_access_extensions();
-
-    require_once __DIR__ . '/../ComposerDependencies.php';
-    \ksfraser\FrontAccounting\HRM\Utils\ComposerDependencies::ensure(__DIR__ . '/..');
+// Point self/uri at the canonical controller so the rendered links and form
+// actions converge on hrm.php instead of bouncing through this shim.
+if (isset($_SERVER['PHP_SELF'])) {
+    $_SERVER['PHP_SELF'] = preg_replace('#/pages/recruitment\.php$#', '/hrm.php', $_SERVER['PHP_SELF']);
+}
+if (isset($_SERVER['SCRIPT_NAME'])) {
+    $_SERVER['SCRIPT_NAME'] = preg_replace('#/pages/recruitment\.php$#', '/hrm.php', $_SERVER['SCRIPT_NAME']);
+}
+if (isset($_SERVER['REQUEST_URI'])) {
+    $_SERVER['REQUEST_URI'] = preg_replace(
+        '#/pages/recruitment\.php(\?|$)#',
+        '/hrm.php$1',
+        $_SERVER['REQUEST_URI']
+    );
 }
 
-// FA's bootstrap loads only ui_view/ui_controls/ui_msgs; ui_input.inc and
-// ui_lists.inc must be included by the page itself, in BOTH the standalone and
-// the app-shell-dispatched case. Include it after the guard so a directly
-// requested page and a shell-dispatched page are loaded identically.
-include_once($path_to_root . '/includes/ui.inc');
+// hrm.php bootstraps FA with $path_to_root = '../..', which PHP resolves
+// against the MAIN script's directory. This shim is the main script and lives one
+// level deeper (pages/), so move to the module root first or the include of
+// ../../includes/session.inc lands above the FA root and fatals.
+chdir(__DIR__ . '/..');
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use ksfraser\FrontAccounting\HRM\Service\DepartmentService;
-
-$departments = new DepartmentService();
-
-if (!$hrm_dispatched) {
-    page(_($help_context = 'Recruitment'), false, false, '', '');
-}
-
-simple_page_mode(true);
-
-$filters = [
-    'department_id' => (int) get_post('filter_department_id', 0),
-    'name_fragment' => (string) get_post('filter_name_fragment', ''),
-];
-
-$department_options = $departments->optionsFor();
-
-// No candidate store exists yet; see the file header.
-$candidates = [];
-$filters_active = ($filters['department_id'] > 0 || trim($filters['name_fragment']) !== '');
-
-start_form();
-
-// ----------------------------------------------------------------------------
-// 1. Filter bar
-// ----------------------------------------------------------------------------
-
-start_table(TABLESTYLE2, 'width=95%');
-table_section_title(_('Filter'));
-
-array_selector_row(_('Department:'), 'filter_department_id', $filters['department_id'],
-    $department_options, ['spec_option' => _('All departments')]);
-text_row(_('Name Contains:'), 'filter_name_fragment', $filters['name_fragment'], 30, 60);
-
-submit_row('Filter', _('Filter'), false, '', false);
-end_table(1);
-
-// ----------------------------------------------------------------------------
-// 2. List table
-// ----------------------------------------------------------------------------
-
-start_table(TABLESTYLE, 'width=95%');
-table_header([
-    _('Candidate'),
-    _('Position'),
-    _('Department'),
-    _('Applied'),
-    _('Status'),
-    '',
-]);
-
-if (count($candidates) > 0) {
-    foreach ($candidates as $candidate) {
-        $id = (int) $candidate['candidate_id'];
-        start_row();
-        label_cell($candidate['candidate_name']);
-        label_cell($candidate['position_title']);
-        label_cell($candidate['department_name']);
-        label_cell($candidate['applied_on'] !== '' ? sql2date($candidate['applied_on']) : '');
-        label_cell($candidate['status']);
-        delete_button_cell('Delete' . $id, _('Delete'));
-        submit_js_confirm('Delete' . $id,
-            sprintf(_('Delete the application for %s?'), $candidate['candidate_name']));
-        end_row();
-    }
-} else {
-    start_row();
-    label_cell($filters_active
-        ? _('No candidates match the current filter.')
-        : _('No candidates have been recorded yet.'), 'colspan=6');
-    end_row();
-}
-
-end_table(1);
-
-// ----------------------------------------------------------------------------
-// 3. Data-entry form
-// ----------------------------------------------------------------------------
-
-start_table(TABLESTYLE2, 'width=95%');
-table_section_title(_('Add Candidate'));
-
-text_row(_('Candidate Name:'), 'candidate_name', '', 40, 100);
-text_row(_('Position:'), 'position_title', '', 40, 100);
-array_selector_row(_('Department:'), 'department_id', '', $department_options);
-date_row(_('Applied On:'), 'applied_on');
-array_selector_row(_('Status:'), 'candidate_status', 'New', [
-    'New' => _('New'),
-    'Screening' => _('Screening'),
-    'Interview' => _('Interview'),
-    'Offered' => _('Offered'),
-    'Hired' => _('Hired'),
-    'Rejected' => _('Rejected'),
-]);
-
-submit_row('Allocate', _('Add Candidate'), false, '', false);
-
-end_table(1);
-
-submit_center(_('Add Candidate'), 'Allocate');
-
-end_form();
-
-display_note(_('Recruitment is not implemented in this module: ksf_FA_HRM ships no '
-    . 'vacancy, candidate or application tables, so this page cannot store the '
-    . 'entry above. The structure is in place and the access area '
-    . '(SA_HRM_RECRUITMENT) is real; the persistence layer is the missing piece.'), 0);
-
-if (!$hrm_dispatched) {
-    end_page();
-}
+require __DIR__ . '/../hrm.php';

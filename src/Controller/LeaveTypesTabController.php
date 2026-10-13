@@ -29,6 +29,10 @@ use ksfraser\FrontAccounting\HRM\Repository\LookupRepository;
  */
 class LeaveTypesTabController extends AbstractTabController
 {
+    // Gives the tab the shared `action=` vocabulary (save / delete / edit)
+    // that hrm.php dispatches to. See TabActionRouting.
+    use TabActionRouting;
+
     /** @var LookupRepository */
     private $repo;
 

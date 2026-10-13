@@ -28,6 +28,10 @@ use ksfraser\FrontAccounting\HRM\Service\DepartmentService;
  */
 class DepartmentsTabController extends AbstractTabController
 {
+    // Gives the tab the shared `action=` vocabulary (save / delete / edit)
+    // that hrm.php dispatches to. See TabActionRouting.
+    use TabActionRouting;
+
     /** @var DepartmentService */
     private $service;
 

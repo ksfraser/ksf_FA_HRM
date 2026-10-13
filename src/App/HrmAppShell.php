@@ -5,33 +5,45 @@ declare(strict_types=1);
 namespace ksfraser\FrontAccounting\HRM\App;
 
 use ksfraser\FrontAccounting\Common\App\AbstractAppShell;
-use ksfraser\FrontAccounting\Common\App\TabRegistration;
 use ksfraser\FrontAccounting\HRM\Controller\BenefitsTabController;
 use ksfraser\FrontAccounting\HRM\Controller\DepartmentsTabController;
 use ksfraser\FrontAccounting\HRM\Controller\EmployeesTabController;
 use ksfraser\FrontAccounting\HRM\Controller\GradesTabController;
+use ksfraser\FrontAccounting\HRM\Controller\LeaveTabController;
 use ksfraser\FrontAccounting\HRM\Controller\LeaveTypesTabController;
+use ksfraser\FrontAccounting\HRM\Controller\PayrollTabController;
 use ksfraser\FrontAccounting\HRM\Controller\PositionsTabController;
+use ksfraser\FrontAccounting\HRM\Controller\RecruitmentTabController;
+use ksfraser\FrontAccounting\HRM\Controller\ReportsTabController;
 use ksfraser\FrontAccounting\HRM\Controller\RolesTabController;
 use ksfraser\FrontAccounting\HRM\Controller\TeamsTabController;
 
 /**
  * HrmAppShell — HRM application shell SRP.
  *
- * Registers the HRM core tabs (employees, departments, positions, ...),
- * then fires the `hrm_register_tabs` register-with-me hook on boot() so any
- * other module can register its own tabs into the HRM app.
+ * Registers the HRM core tabs (employees, departments, positions, ...), then
+ * fires the `hrm_register_tabs` register-with-me hook on boot() so any other
+ * module can register its own tabs into the HRM app.
+ *
+ * The app id is `hrm`, which is what derives the hook name: another module adds
+ * a tab by exposing `hrm_register_tabs(&$data)` on its hooks class. See
+ * README.md ("Adding an HRM tab from another module").
  *
  * Core tabs are registered at construction time so the host page can resolve
  * the per-view security area BEFORE session.inc. External tabs contributed via
  * the hook carry their own security and are merged into the menu + dispatch.
+ *
+ * Every tab is controller-backed: there is no `pageFile` fallback left, and
+ * hrm.php is the single front controller for the whole application. The former
+ * pages/*.php scripts (payroll, leave, recruitment, reports) are now thin
+ * forwarder shims onto hrm.php.
  *
  * PHP 7.3 compatible.
  *
  * @package ksf_FA_HRM
  * @since   1.0.0
  *
- * @UML Note: APP_TAB_ARCHITECTURE.md §7 (app host)
+ * @UML Note: APP_TAB_ARCHITECTURE.md §11 (app host)
  * @BABOK Related: FR-HRM-001 (App shell tab registration)
  */
 class HrmAppShell extends AbstractAppShell
@@ -43,23 +55,53 @@ class HrmAppShell extends AbstractAppShell
      */
     public function __construct(string $defaultView = 'employees')
     {
-        parent::__construct('hrm', 'index.php', 'view', $defaultView);
+        // viewParam 'page' is the user-facing tab selector: `hrm.php?page=leave`.
+        //
+        // It collides with AbstractTabController's pager, which also reads
+        // $_GET['page'] and whose MasterSummaryTable pager links emit
+        // `?page=<n>`. hrm.php resolves the two by rule — a `page` that names a
+        // registered tab is the tab, a numeric `page` is the pager position and
+        // the tab then comes from `view`. The controllers' preserveParams()
+        // therefore returns ['view'] so pager links carry the tab alongside the
+        // page number, e.g. `?page=2&view=leave`.
+        parent::__construct('hrm', 'hrm.php', 'page', $defaultView);
         $this->registerCoreTabs();
     }
 
     /**
-     * Core HRM tabs, each mapped to its page script + security area.
+     * Instantiate the controller for a tab, with the tab key injected so the
+     * controller can build links that keep the tab selected.
      *
-     * The eight add-link catalogue tabs (employees, departments, positions,
-     * grades, benefits, leave_types, roles, teams) are controller-backed and
-     * are NOT given a page script — the controller owns the whole tab, so
-     * dispatch() never falls through to pages/<key>.php. The remaining tabs
-     * (payroll, leave, recruitment, reports) keep their page scripts.
+     * Overrides AbstractAppShell::createController() — the base news the class
+     * up with no arguments, which leaves the controller unable to tell which
+     * tab it is serving.
+     *
+     * @param \ksfraser\FrontAccounting\Common\App\TabRegistration $tab
+     *
+     * @return object|null
+     *
+     * @since 1.1.0
+     */
+    protected function createController(\ksfraser\FrontAccounting\Common\App\TabRegistration $tab)
+    {
+        $class = $tab->getControllerClass();
+        if ($class === null || !class_exists($class)) {
+            return null;
+        }
+        return new $class(null, ['view' => $tab->getKey()]);
+    }
+
+    /**
+     * Core HRM tabs, each mapped to its controller class and security area.
+     *
+     * Every tab is controller-backed, so dispatch() always runs a controller's
+     * run(). The filter-menu / summary-table / data-entry-form tabs (payroll,
+     * leave, recruitment, reports) extend FilteredTabController, which adds
+     * the filter bar the plain AbstractTabController has no slot for.
      *
      * Roles and Teams were previously unreachable: pages/roles.php and
      * pages/teams.php existed but neither tab was registered here, so
      * dispatch() had nothing to resolve and the pages could never render.
-     * They are now registered and controller-backed.
      *
      * @return void
      *
@@ -67,18 +109,19 @@ class HrmAppShell extends AbstractAppShell
      */
     protected function registerCoreTabs(): void
     {
-        $root = dirname(__DIR__, 2);
-
-        // Controller-backed tabs: key => controller class.
         $controllers = [
             'employees'   => EmployeesTabController::class,
             'departments' => DepartmentsTabController::class,
             'positions'   => PositionsTabController::class,
             'grades'      => GradesTabController::class,
-            'benefits'    => BenefitsTabController::class,
-            'leave_types' => LeaveTypesTabController::class,
             'roles'       => RolesTabController::class,
             'teams'       => TeamsTabController::class,
+            'payroll'     => PayrollTabController::class,
+            'benefits'    => BenefitsTabController::class,
+            'leave'       => LeaveTabController::class,
+            'leave_types' => LeaveTypesTabController::class,
+            'recruitment' => RecruitmentTabController::class,
+            'reports'     => ReportsTabController::class,
         ];
 
         $tabs = [
@@ -98,17 +141,19 @@ class HrmAppShell extends AbstractAppShell
 
         $priority = 0;
         foreach ($tabs as $tab) {
-            $key = $tab['key'];
-            $controllerClass = isset($controllers[$key]) ? $controllers[$key] : null;
-            $this->registerTab(new TabRegistration(
-                $key,
-                $tab['label'],
-                $tab['security'],
-                $controllerClass,
-                $priority,
-                0,
-                $controllerClass === null ? ($root . '/pages/' . $key . '.php') : null
-            ));
+            $key = (string) $tab['key'];
+            $this->registerTabFromArray([
+                'key'              => $key,
+                'label'            => $tab['label'],
+                'security'         => $tab['security'],
+                'controller_class' => isset($controllers[$key]) ? $controllers[$key] : null,
+                'priority'         => $priority,
+                'order'            => 0,
+                // No page_file: hrm.php is the only entry point, and every tab
+                // is served by a controller.
+                'page_file'        => null,
+                'options'          => ['view' => $key],
+            ]);
             $priority += 10;
         }
     }

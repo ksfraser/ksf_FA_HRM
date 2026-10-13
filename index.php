@@ -1,61 +1,51 @@
 <?php
 /**
- * ksf_FA_HRM Entry Point
+ * ksf_FA_HRM — legacy entry point. Forwarder only.
  *
- * App-shell router: resolves the ?view= tab from the HrmAppShell, sets the
- * per-view security BEFORE session.inc, then boots the shell (fires the
- * `hrm_register_tabs` register-with-me hook so other modules can add tabs),
- * renders the sub-menu and dispatches to the tab controller SRP or page script.
+ * The application moved to a single front controller, hrm.php. This file
+ * exists so that:
+ *   - FA's own extension index (and the sidebar menu in hooks.php, which links
+ *     to modules/ksf_FA_HRM/index.php) keeps working, and
+ *   - existing `index.php?view=employees` bookmarks keep resolving.
+ *
+ * It forwards internally rather than issuing a redirect, so a POST that was
+ * already in flight when the module was upgraded keeps its body. $_SERVER is
+ * rewritten to hrm.php as well, so the forms the tabs render post back to the
+ * canonical URL and the browser's address bar converges on hrm.php.
  *
  * @package ksf_FA_HRM
- * @since 1.0.0
+ * @since   1.1.0
+ *
+ * @UML Note: APP_TAB_ARCHITECTURE.md §11 (host page = thin router)
+ * @BABOK Related: FR-HRM-001 (app shell)
  */
 
-require_once __DIR__ . '/ComposerDependencies.php';
-\ksfraser\FrontAccounting\HRM\Utils\ComposerDependencies::ensure(__DIR__);
+// Rewrite any legacy `view=` onto the `page=` selector, keeping the rest of the
+// query string (filters, ids) intact.
+if (!isset($_GET['page']) && isset($_GET['view']) && $_GET['view'] !== '') {
+    $_GET['page'] = (string) $_GET['view'];
+}
+unset($_GET['view']);
 
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+// A numeric `page` on an old link is a pager position, not a tab; hrm.php falls
+// back to its default view for that case, which is the correct behaviour.
+
+$_GET['view'] = isset($_GET['page']) ? (string) $_GET['page'] : '';
+
+// Make hrm.php the canonical self/uri so anything building a link or form
+// action from $_SERVER points at the real controller.
+if (isset($_SERVER['PHP_SELF'])) {
+    $_SERVER['PHP_SELF'] = preg_replace('#/index\.php$#', '/hrm.php', $_SERVER['PHP_SELF']);
+}
+if (isset($_SERVER['SCRIPT_NAME'])) {
+    $_SERVER['SCRIPT_NAME'] = preg_replace('#/index\.php$#', '/hrm.php', $_SERVER['SCRIPT_NAME']);
+}
+if (isset($_SERVER['REQUEST_URI'])) {
+    $_SERVER['REQUEST_URI'] = preg_replace(
+        '#/index\.php(\?|$)#',
+        '/hrm.php$1',
+        $_SERVER['REQUEST_URI']
+    );
 }
 
-$path_to_root = "../..";
-
-$appShell = new \ksfraser\FrontAccounting\HRM\App\HrmAppShell();
-
-$view = isset($_GET['view']) ? (string) $_GET['view'] : $appShell->getDefaultView();
-if ($appShell->getTab($view) === null) {
-    $view = $appShell->getDefaultView();
-}
-
-$page_security = $appShell->getSecurity($view, 'SA_ksf_FA_HRMVIEW');
-include_once($path_to_root . "/includes/session.inc");
-add_access_extensions();
-
-// FA's bootstrap loads only ui_view/ui_controls/ui_msgs; ui_input.inc and
-// ui_lists.inc must be pulled in by the page. Without this every helper this
-// module's tabs use -- start_table is fine, but text_row(), amount_row(),
-// date_row(), array_selector_row(), submit_row(), submit_center() and the
-// edit/delete button cells all live in ui_input.inc / ui_lists.inc -- is an
-// undefined function once the tab is actually rendered. Same fix CRM applies
-// in its own index.php.
-include_once($path_to_root . "/includes/ui.inc");
-
-// Fire the register-with-me hook: other modules may add their tabs now.
-$appShell->boot();
-
-page(_("HRM"), false, false, '', '');
-
-echo $appShell->renderMenu($view);
-
-// Tabs that are backed by a legacy page script rather than an
-// AbstractTabController SRP have that script *included* by dispatch(). Those
-// scripts are also reachable directly by URL, so they need to know whether FA
-// has already been booted and the page chrome opened by this file. Setting
-// HRM_APP_SHELL_DISPATCH lets a page skip its own session.inc/page()/end_page()
-// round trip and render only its body, instead of nesting a second document
-// inside this one.
-define('HRM_APP_SHELL_DISPATCH', true);
-
-$appShell->dispatch($view);
-
-end_page();
+require __DIR__ . '/hrm.php';

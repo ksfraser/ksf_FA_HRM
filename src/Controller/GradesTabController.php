@@ -30,6 +30,10 @@ use ksfraser\FrontAccounting\HRM\Service\GradeService;
  */
 class GradesTabController extends AbstractTabController
 {
+    // Gives the tab the shared `action=` vocabulary (save / delete / edit)
+    // that hrm.php dispatches to. See TabActionRouting.
+    use TabActionRouting;
+
     /** @var GradeService */
     private $service;
 
