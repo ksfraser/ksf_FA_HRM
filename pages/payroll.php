@@ -6,7 +6,7 @@
  * The page body now lives in src/Controller/PayrollTabController.php
  * and is reached as:
  *
- *     ../hrm.php?page=payroll
+ *     ../hrm.php?tab=payroll
  *
  * This shim exists for one release so existing bookmarks and any hard-coded
  * links keep resolving. It forwards internally rather than redirecting, so an
@@ -16,15 +16,15 @@
  * security area (see ../hooks.php::install_access).
  *
  * @package ksf_FA_HRM
- * @since   1.1.0 (deprecated — use ../hrm.php?page=payroll)
+ * @since   1.1.0 (deprecated — use ../hrm.php?tab=payroll)
  *
- * @deprecated 1.1.0 Forwarder to ../hrm.php?page=payroll
+ * @deprecated 1.1.0 Forwarder to ../hrm.php?tab=payroll
  */
 
 // The tab's own security area is resolved and enforced by hrm.php, which reads
 // it from the tab registration before session.inc runs.
 
-$_GET['page'] = 'payroll';
+$_GET['tab'] = 'payroll';
 
 // Point self/uri at the canonical controller so the rendered links and form
 // actions converge on hrm.php instead of bouncing through this shim.

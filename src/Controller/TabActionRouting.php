@@ -171,8 +171,11 @@ trait TabActionRouting
      * Carries the active tab plus every current GET parameter, minus the ones
      * that describe the request being answered: `action` (re-triggering it on
      * the redirected GET would replay the mutation), `id` (the row is gone or
-     * already loaded into the form) and `view` (`page` already carries the
-     * tab; `view` is only the pager's fallback and is re-derived on arrival).
+     * already loaded into the form) and `view` (the deprecated alias of `tab`;
+     * it is never propagated, `tab` is re-derived on arrival).
+     *
+     * `page` is deliberately left in the query: it is the pager position, and a
+     * user who saved a record while on page 3 should come back to page 3.
      *
      * @param array<string, mixed> $params Extra parameters to set
      *
@@ -189,7 +192,7 @@ trait TabActionRouting
         unset($query['action'], $query['id'], $query['view']);
 
         if ($view !== '') {
-            $query['page'] = $view;
+            $query['tab'] = $view;
         }
         foreach ($params as $name => $value) {
             $query[$name] = $value;
@@ -277,13 +280,16 @@ trait TabActionRouting
     }
 
     /**
-     * Preserve the active view key on pager links.
+     * Preserve the active tab on pager links.
      *
-     * hrm.php normalises the resolved tab into $_GET['view'] before dispatch,
-     * and MasterSummaryTable::pagerUrl() re-reads $_GET['view'] when building its
-     * links. The tab selector is `page`, which the pager also uses for the page
-     * number, so pager links read `?page=<n>&view=<tab>`; hrm.php resolves the
-     * tab from `view` whenever `page` is not a registered tab key.
+     * hrm.php normalises the resolved tab into $_GET['tab'] before dispatch, and
+     * MasterSummaryTable::pagerUrl() re-reads every $_GET key named in the
+     * table's `preserve_params` option when building its links. So pager links
+     * read `?page=<n>&tab=<key>`: the pager keeps its page number and the tab
+     * survives alongside it.
+     *
+     * `page` is pagination only and `tab` is the tab selector — the two no
+     * longer share a parameter, so there is nothing to disambiguate.
      *
      * @return string[]
      *
@@ -291,6 +297,6 @@ trait TabActionRouting
      */
     protected function preserveParams(): array
     {
-        return ['view'];
+        return ['tab'];
     }
 }

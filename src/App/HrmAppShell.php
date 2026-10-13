@@ -55,16 +55,17 @@ class HrmAppShell extends AbstractAppShell
      */
     public function __construct(string $defaultView = 'employees')
     {
-        // viewParam 'page' is the user-facing tab selector: `hrm.php?page=leave`.
+        // viewParam 'tab' is the user-facing tab selector: `hrm.php?tab=leave`.
         //
-        // It collides with AbstractTabController's pager, which also reads
-        // $_GET['page'] and whose MasterSummaryTable pager links emit
-        // `?page=<n>`. hrm.php resolves the two by rule — a `page` that names a
-        // registered tab is the tab, a numeric `page` is the pager position and
-        // the tab then comes from `view`. The controllers' preserveParams()
-        // therefore returns ['view'] so pager links carry the tab alongside the
-        // page number, e.g. `?page=2&view=leave`.
-        parent::__construct('hrm', 'hrm.php', 'page', $defaultView);
+        // It is deliberately NOT 'page'. AbstractTabController::page() reads
+        // $_GET['page'] for the pager position and MasterSummaryTable::pagerUrl()
+        // writes `?page=<n>` into its pager links, so using 'page' here would
+        // have two meanings in one parameter and force a heuristic to tell them
+        // apart. `page` means pagination and nothing else; `tab` means the tab.
+        //
+        // The controllers' preserveParams() returns ['tab'] so pager links carry
+        // the tab alongside the page number, e.g. `?page=2&tab=leave`.
+        parent::__construct('hrm', 'hrm.php', 'tab', $defaultView);
         $this->registerCoreTabs();
     }
 

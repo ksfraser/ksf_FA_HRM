@@ -6,7 +6,7 @@
  * The page body now lives in src/Controller/RecruitmentTabController.php
  * and is reached as:
  *
- *     ../hrm.php?page=recruitment
+ *     ../hrm.php?tab=recruitment
  *
  * This shim exists for one release so existing bookmarks and any hard-coded
  * links keep resolving. It forwards internally rather than redirecting, so an
@@ -16,15 +16,15 @@
  * security area (see ../hooks.php::install_access).
  *
  * @package ksf_FA_HRM
- * @since   1.1.0 (deprecated — use ../hrm.php?page=recruitment)
+ * @since   1.1.0 (deprecated — use ../hrm.php?tab=recruitment)
  *
- * @deprecated 1.1.0 Forwarder to ../hrm.php?page=recruitment
+ * @deprecated 1.1.0 Forwarder to ../hrm.php?tab=recruitment
  */
 
 // The tab's own security area is resolved and enforced by hrm.php, which reads
 // it from the tab registration before session.inc runs.
 
-$_GET['page'] = 'recruitment';
+$_GET['tab'] = 'recruitment';
 
 // Point self/uri at the canonical controller so the rendered links and form
 // actions converge on hrm.php instead of bouncing through this shim.

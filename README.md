@@ -26,7 +26,7 @@ modules/ksf_FA_HRM/hrm.php
 ```
 
 `index.php` and `pages/*.php` are forwarder shims kept for one release so
-existing bookmarks keep working. They set `$_GET['page']`, rewrite
+existing bookmarks keep working. They set `$_GET['tab']`, rewrite
 `$_SERVER['PHP_SELF']`/`REQUEST_URI` to `hrm.php` and then `require` it
 internally — no redirect, so an in-flight POST keeps its body.
 
@@ -35,30 +35,44 @@ internally — no redirect, so an in-flight POST keeps its body.
 | URL | Meaning |
 |-----|---------|
 | `hrm.php` | default tab (`employees`) |
-| `hrm.php?page=<tab>` | read a tab |
-| `hrm.php?page=<tab>&filter_<x>=…` | read a tab with a filter applied |
-| `hrm.php?page=<tab>&action=edit&id=N` | pre-load the entry form for record N |
-| `hrm.php?page=<tab>&action=save` | create / update — **POST only** |
-| `hrm.php?page=<tab>&action=delete&id=N` | delete record N — **POST only** |
+| `hrm.php?tab=<tab>` | read a tab |
+| `hrm.php?tab=<tab>&filter_<x>=…` | read a tab with a filter applied |
+| `hrm.php?tab=<tab>&page=N` | read a tab, pager position N |
+| `hrm.php?tab=<tab>&action=edit&id=N` | pre-load the entry form for record N |
+| `hrm.php?tab=<tab>&action=save` | create / update — **POST only** |
+| `hrm.php?tab=<tab>&action=delete&id=N` | delete record N — **POST only** |
+
+`tab` and `page` are separate parameters with separate jobs: **`tab` is the tab
+selector, `page` is the pager position.**
 
 `action=delete` is POST-only on purpose: a GET-addressable delete is a
 cross-site request forgery. The summary table's own Delete buttons are POST
 submit buttons, so they are the only reachable path.
 
-### Why `page` carries the tab *and* the pager page number
+### Why `tab` and not `page`
 
-`AbstractTabController` reads `$_GET['page']` for paging, and
-`MasterSummaryTable::pagerUrl()` writes `?page=<n>` into its pager links. The
-tab selector therefore cannot *also* be `page` without colliding, so `hrm.php`
-resolves by rule:
+`AbstractTabController::page()` reads `$_GET['page']` for paging, and
+`MasterSummaryTable::pagerUrl()` writes `?page=<n>` into its pager links. So the
+tab selector must NOT be `page`: one parameter cannot mean both without a
+disambiguation heuristic, and the heuristic ("a `page` that names a registered
+tab is the tab, anything else is a pager position") would silently misroute a
+future tab whose key happened to look numeric.
 
-1. a `page` value that names a **registered tab key** is the tab;
-2. anything else (a number) is the **pager position**, and the tab comes from
-   `view`;
-3. neither → the shell's default view.
+`tab` carries the tab, `page` carries the pager position, and nothing else.
+`HrmAppShell` passes `'tab'` to `AbstractAppShell` as its `viewParam`, so the
+menu renders `hrm.php?tab=<key>` for every tab.
 
-Pager links are emitted as `?page=<n>&view=<tab>` and resolve cleanly through
-that rule. `?view=<tab>` is still accepted, so pre-1.1.0 bookmarks work.
+**Pager links keep the tab** because `MasterSummaryTable` already accepts a
+`preserve_params` option: a list of `$_GET` key names it copies verbatim onto
+the pager URLs it builds. `TabActionRouting::preserveParams()` returns
+`['tab']` and `hrm.php` normalises the resolved tab into `$_GET['tab']` before
+dispatch, so the links come out as `?page=<n>&tab=<key>` and resolve to the same
+tab on the new page. No change to the shared package was needed.
+
+`?view=<tab>` is still accepted as a deprecated alias for `tab`, so pre-1.1.0
+`index.php?view=` bookmarks work. `?page=<tab>` is **not** aliased: it was
+published for minutes and never depended upon, and aliasing it would re-create
+the collision.
 
 ### Tabs
 
@@ -107,7 +121,7 @@ class hooks_ksf_FA_Timesheets extends hooks
      * Contribute a tab to the HRM application shell.
      *
      * Anything appended to $data['tabs'] is merged into the HRM menu and is
-     * reachable at hrm.php?page=<key>.
+     * reachable at hrm.php?tab=<key>.
      *
      * @param array $data  Hook payload; append to $data['tabs'] by reference.
      * @param mixed $opts  Unused, part of the FA hook signature.
@@ -117,7 +131,7 @@ class hooks_ksf_FA_Timesheets extends hooks
     public function hrm_register_tabs(&$data, $opts = null)
     {
         $data['tabs'][] = array(
-            'key'              => 'timesheets',        // hrm.php?page=timesheets
+            'key'              => 'timesheets',        // hrm.php?tab=timesheets
             'label'            => _('Timesheets'),
             'security'         => 'SA_TIMESHEETS',    // your module's FA area
             'controller_class' => \ksfraser\FrontAccounting\Timesheets\Controller\TimesheetsTabController::class,
@@ -132,7 +146,7 @@ class hooks_ksf_FA_Timesheets extends hooks
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `key` | yes | Unique across the app; it is the `?page=` value. |
+| `key` | yes | Unique across the app; it is the `?tab=` value. |
 | `label` | yes | Already translated by the responder. |
 | `security` | yes | An FA security area from **your** `install_access()`. `hrm.php` falls back to `SA_ksf_FA_HRMVIEW` for the pre-session check and re-checks this area after `boot()`. |
 | `controller_class` | one of | FQCN of an `AbstractTabController` (or `FilteredTabController`) subclass, **or** |
@@ -177,7 +191,7 @@ firing the hook again.
 2. `session.inc` + `add_access_extensions()`.
 3. `$appShell->boot()` fires `hrm_register_tabs` and merges the responders.
 4. `hrm.php` re-resolves the view, so a tab that only appeared at step 3 is
-   still reachable by direct `?page=` URL.
+   still reachable by direct `?tab=` URL.
 5. `page()` → `renderMenu()` → `dispatch($view)` → the controller's `run()`.
 
 ## Overview
@@ -446,7 +460,7 @@ ksf_process_employee_import($row);
 
 ```
 ksf_FA_HRM/
-├── hrm.php                     # SINGLE front controller (?page= / ?action=)
+├── hrm.php                     # SINGLE front controller (?tab= / ?page= / ?action=)
 ├── index.php                   # forwarder shim -> hrm.php
 ├── pages/                      # forwarder shims -> hrm.php (deprecated)
 ├── includes/

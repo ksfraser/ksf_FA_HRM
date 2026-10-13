@@ -20,17 +20,19 @@
  * @BABOK Related: FR-HRM-001 (app shell)
  */
 
-// Rewrite any legacy `view=` onto the `page=` selector, keeping the rest of the
-// query string (filters, ids) intact.
-if (!isset($_GET['page']) && isset($_GET['view']) && $_GET['view'] !== '') {
-    $_GET['page'] = (string) $_GET['view'];
+// Rewrite the legacy `view=` selector onto the canonical `tab=`, keeping the
+// rest of the query string (filters, ids, and the `page=` pager position)
+// intact.
+if (!isset($_GET['tab']) && isset($_GET['view']) && $_GET['view'] !== '') {
+    $_GET['tab'] = (string) $_GET['view'];
 }
 unset($_GET['view']);
 
-// A numeric `page` on an old link is a pager position, not a tab; hrm.php falls
-// back to its default view for that case, which is the correct behaviour.
-
-$_GET['view'] = isset($_GET['page']) ? (string) $_GET['page'] : '';
+// A `page=` on the way in is a pager position, never a tab selector: hrm.php
+// reads `tab=` for the tab and `page=` only for paging. An old `index.php?page=leave`
+// link therefore lands on the default tab rather than the Leave tab — the
+// `?page=<tab>` form was published for minutes and was never depended upon, so
+// it was dropped rather than aliased.
 
 // Make hrm.php the canonical self/uri so anything building a link or form
 // action from $_SERVER points at the real controller.

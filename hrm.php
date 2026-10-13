@@ -10,24 +10,34 @@
  * URL shape
  * ---------
  *   hrm.php                                 default tab (employees)
- *   hrm.php?page=payroll                    read the payroll tab
- *   hrm.php?page=leave&filter_year=2026     read with a filter applied
- *   hrm.php?page=payroll&action=edit&id=7   pre-load the entry form for run 7
- *   hrm.php?page=payroll&action=save        POST only
- *   hrm.php?page=payroll&action=delete&id=7 POST only (CSRF)
+ *   hrm.php?tab=payroll                     read the payroll tab
+ *   hrm.php?tab=leave&filter_year=2026      read with a filter applied
+ *   hrm.php?tab=leave&page=3                Leave tab, pager position 3
+ *   hrm.php?tab=payroll&action=edit&id=7    pre-load the entry form for run 7
+ *   hrm.php?tab=payroll&action=save         POST only
+ *   hrm.php?tab=payroll&action=delete&id=7  POST only (CSRF)
  *
- * Two parameters carry the tab, and that is deliberate:
+ * Two parameters, two jobs, no collision:
  *
- *   `page` is what the user types and what the menu renders. It is ALSO what
- *   AbstractTabController reads for pager paging and what MasterSummaryTable
- *   writes into its pager links (`?page=<n>`), so the two collide.
+ *   `tab` is the TAB SELECTOR — what the user types, what the menu renders
+ *   (HrmAppShell passes 'tab' as AbstractAppShell's viewParam), and what every
+ *   link the app emits carries.
  *
- *   hrm.php therefore resolves `page` as follows: a value that names a
- *   registered tab key IS the view; anything else (a number) is the pager page
- *   and the view falls back to `view`. Pager links are emitted as
- *   `?page=<n>&view=<tab>` and resolve cleanly through this rule. Both
- *   `?page=<tab>` and `?view=<tab>` are accepted on the way in, so index.php's
- *   old `?view=` bookmarks keep working.
+ *   `page` is PAGINATION and nothing else. AbstractTabController::page() reads
+ *   it for the pager position and MasterSummaryTable::pagerUrl() writes it into
+ *   its pager links, so it had a second, conflicting meaning as a tab selector.
+ *   Resolving the tab from `tab` instead removes the ambiguity entirely: there
+ *   is no heuristic left to get wrong, and a hypothetical future tab with a
+ *   numeric key can no longer be mistaken for a pager position.
+ *
+ *   Pager links keep the tab because the controllers pass `preserve_params =>
+ *   ['tab']` to MasterSummaryTable, which copies those `$_GET` keys verbatim
+ *   onto the links it builds: `?page=3&tab=leave`.
+ *
+ *   `?view=<tab>` is still accepted as a DEPRECATED ALIAS for `tab` because
+ *   index.php used `?view=` long before hrm.php existed. `?page=<tab>` is NOT:
+ *   it was published for minutes, was never depended upon, and keeping it would
+ *   re-introduce the exact collision this rename removes.
  *
  * The app id is `hrm`, so boot() fires `hook_invoke_all('hrm_register_tabs')`
  * and another module can add its own tab to the HRM menu. See README.md.
@@ -53,10 +63,12 @@
 /**
  * Resolve the requested tab key from the request.
  *
- * `page` wins when it names a registered tab; a numeric `page` is a pager
- * position, so `view` is consulted next. Anything unrecognised falls back to
- * the shell's default view rather than erroring — a stale bookmark should land
- * on a working tab, not a blank page.
+ * `tab` is the selector. `view` is a deprecated alias kept for index.php's
+ * long-standing `?view=` bookmarks; it is consulted only when `tab` is absent.
+ * `page` is deliberately NOT consulted — it is the pager position, and treating
+ * it as a tab selector is the collision this design removes. Anything
+ * unrecognised falls back to the shell's default view rather than erroring, so a
+ * stale bookmark lands on a working tab rather than a blank page.
  *
  * @param object $appShell HrmAppShell instance
  *
@@ -68,8 +80,8 @@ function hrm_resolve_view($appShell)
 {
     $candidates = [];
 
-    if (isset($_GET['page']) && $_GET['page'] !== '') {
-        $candidates[] = (string) $_GET['page'];
+    if (isset($_GET['tab']) && $_GET['tab'] !== '') {
+        $candidates[] = (string) $_GET['tab'];
     }
     if (isset($_GET['view']) && $_GET['view'] !== '') {
         $candidates[] = (string) $_GET['view'];
@@ -209,9 +221,21 @@ if ($view === $appShell->getDefaultView()) {
     }
 }
 
-// Normalise the resolved tab back into $_GET['view'] so MasterSummaryTable's
-// pager links (which preserve $_GET['view']) keep the tab selected.
-$_GET['view'] = $view;
+// Normalise the resolved tab back into $_GET['tab'] so the links the app emits
+// carry it verbatim:
+//
+//   - MasterSummaryTable::pagerUrl() copies each name in the table's
+//     `preserve_params` list straight out of $_GET, and the controllers pass
+//     ['tab'] — so pager links read `?page=3&tab=leave`;
+//   - TabActionRouting::hrmActionUrl() starts from $_GET when rebuilding the
+//     post-action redirect URL.
+//
+// Writing `tab` rather than the old `view` also means an arrival on the
+// deprecated `?view=` alias is normalised onto the canonical parameter.
+// $_GET['page'] is left untouched: it is the pager position and must survive
+// into pager links and form actions verbatim.
+$_GET['tab'] = $view;
+unset($_GET['view']);
 
 $action = isset($_REQUEST['action']) ? (string) $_REQUEST['action'] : '';
 

@@ -6,7 +6,7 @@
  * The page body now lives in src/Controller/LeaveTabController.php
  * and is reached as:
  *
- *     ../hrm.php?page=leave
+ *     ../hrm.php?tab=leave
  *
  * This shim exists for one release so existing bookmarks and any hard-coded
  * links keep resolving. It forwards internally rather than redirecting, so an
@@ -16,15 +16,15 @@
  * security area (see ../hooks.php::install_access).
  *
  * @package ksf_FA_HRM
- * @since   1.1.0 (deprecated — use ../hrm.php?page=leave)
+ * @since   1.1.0 (deprecated — use ../hrm.php?tab=leave)
  *
- * @deprecated 1.1.0 Forwarder to ../hrm.php?page=leave
+ * @deprecated 1.1.0 Forwarder to ../hrm.php?tab=leave
  */
 
 // The tab's own security area is resolved and enforced by hrm.php, which reads
 // it from the tab registration before session.inc runs.
 
-$_GET['page'] = 'leave';
+$_GET['tab'] = 'leave';
 
 // Point self/uri at the canonical controller so the rendered links and form
 // actions converge on hrm.php instead of bouncing through this shim.
