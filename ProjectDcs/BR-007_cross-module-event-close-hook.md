@@ -62,7 +62,7 @@ Determination is a generic query, not hard-coded:
 
 ## Out of scope (guard rails — proven have-nots stay have-nots)
 - No parallel "attendance" table — attendees come from Calendar's native
-  0_fa_cal_invitees.
+  0_ksf_calendar_invitees.
 - No writing of timesheets/expense/leave tables from any module except the
   owning one.
 - No duplicate of the hook payload: one DTO, hardlinked declarator, no
