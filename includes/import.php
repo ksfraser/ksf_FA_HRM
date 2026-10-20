@@ -24,29 +24,15 @@ function ksf_render_hrm_import($type)
     ];
 
     $processor = function($row) use ($type) {
-        global $db;
-        include_once INCLUDES . '/db.inc';
-        
-        $emp_no = $row['emp_no'] ?? '';
-        if (empty($emp_no)) return false;
-        
-        $check = db_fetch_assoc(db_query(
-            "SELECT emp_no FROM " . TB_PREF . "ksf_employees WHERE emp_no = " . db_escape($emp_no)
-        ));
-        
-        if ($check) {
-            $sets = [];
-            foreach ($row as $f => $v) {
-                if ($f !== 'emp_no') $sets[] = "$f = " . db_escape($v);
-            }
-            db_query("UPDATE " . TB_PREF . "ksf_employees SET " . implode(', ', $sets) . " WHERE emp_no = " . db_escape($emp_no));
-        } else {
-            $cols = implode(', ', array_keys($row));
-            $vals = implode(', ', array_map(function ($v) { return db_escape($v); }, array_values($row)));
-            db_query("INSERT INTO " . TB_PREF . "ksf_employees ($cols) VALUES ($vals)");
+        // The employee is an FA person plus a row in HRM's own employment
+        // table; see includes/employee_import.inc for why.
+        require_once __DIR__ . '/employee_import.inc';
+
+        if (!hrm_import_employee_row($row)) {
+            return false;
         }
-        
-        return ['emp_no' => $emp_no];
+
+        return ['emp_no' => $row['emp_no'] ?? ''];
     };
     
     ob_start();
